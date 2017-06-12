@@ -10,13 +10,14 @@ This temporary script file is located here:
 import numpy as np
 
 import pandas as pd
-
+import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 
 ####### implement biological model Hong et al 2008
 
 ### dictionary of parameters
 
+### rate constants per hour
 rate_constants = {
     'k1'    : 1.8,
     'k2'    : 1.8,
@@ -66,11 +67,11 @@ def clock(state, t, params):
         ###  ODEs Hong et al 2008
         ### letzter summand unklar bei dtfrqmrna
         
-        dt_frq_mrna     = (rate['k1'] * (wc1_n**2) / (dis_const['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) + rate['k1'] 
+        dt_frq_mrna     = (rate['k1'] * (wc1_n**2) / (dis_const['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
         dt_frq_c        = rate['k2'] * frq_mrna - ((rate['k3'] + rate['k5']) * frq_c)
         dt_frq_n        = (rate['k3'] * frq_c) + (rate['k14'] * frq_n_wc1_n) - (frq_n * (rate['k6'] + (rate['k13'] * wc1_n)))
         dt_wc1_mrna     = rate['k7'] - (rate['k10'] * wc1_mrna)
-        dt_wc1_c        = (rate['k8'] * frq_c * wc1_mrna / (dis_const['K2'] + frq_c)) - ((rate['k9'] + rate['k11']) * wc1_c) + (rate['k2'] * wc1_mrna)
+        dt_wc1_c        = (rate['k8'] * frq_c * wc1_mrna / (dis_const['K2'] + frq_c)) - ((rate['k9'] + rate['k11']) * wc1_c)
         dt_wc1_n        = (rate['k9'] * wc1_c) - (wc1_n * (rate['k12'] + (rate['k13'] * frq_n))) + (rate['k14'] * frq_n_wc1_n)
         dt_frq_n_wc1_n  = rate['k13'] * frq_n * wc1_n - ((rate['k14'] + rate['k15']) * frq_n_wc1_n)
         
@@ -87,6 +88,18 @@ def clock(state, t, params):
         return dt_state
                
 ### set initial state and time vector
-               
-               
-        
+state0 = [2.0,1.0,1.0,1.6,0.25,0.25,0.1]
+t      = np.arange(0,48,0.001)
+
+### what is a proper time resolution?
+
+### run simulation
+state = odeint(clock,state0,t,args=(params,))  
+
+### plot all ODEs
+plt.plot(t,state)
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.xticks(np.arange(0, 49, 12.0))
+plt.legend(["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"],loc='center left', bbox_to_anchor=(0.6, 0.5))
+plt.show()
