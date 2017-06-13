@@ -88,7 +88,21 @@ def clock(state, t, params):
         return dt_state
                
 ### set initial state and time vector
-state0 = [2.0,1.0,1.0,1.6,0.25,0.25,0.1]
+
+### set initial conditions for each ODE
+
+frq_mrna0    = 4.0
+frq_c0       = 30.0
+frq_n0       = 0.1
+wc1_mrna0    = 1.6
+wc1_c0       = 0.03225
+wc1_n0       = 0.35
+frq_n_wc1_n0 = 0.18
+
+state0 = [frq_mrna0,frq_c0,frq_n0,wc1_mrna0,wc1_c0,wc1_n0,frq_n_wc1_n0]
+
+### set time to integrate
+
 t      = np.arange(0,48,0.001)
 
 ### what is a proper time resolution?
@@ -102,4 +116,58 @@ plt.xlabel("time [h]")
 plt.ylabel("a.u")
 plt.xticks(np.arange(0, 49, 12.0))
 plt.legend(["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"],loc='center left', bbox_to_anchor=(0.6, 0.5))
+plt.show()
+
+
+###
+plt.figure(figsize=(8,12))
+plt.subplot(4,2,1)
+plt.plot(t, state[:,0])
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.xticks(np.arange(0, 49, 12.0))
+plt.title('frq mRNA')
+
+plt.subplot(4,2,2)
+plt.plot(t, state[:,1])
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.xticks(np.arange(0, 49, 12.0))
+plt.title('FRQc')
+
+plt.subplot(4,2,3)
+plt.plot(t, state[:,2])
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.xticks(np.arange(0, 49, 12.0))
+plt.title('FRQn')
+
+plt.subplot(4,2,4)
+plt.plot(t, state[:,3])
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.xticks(np.arange(0, 49, 12.0))
+plt.title('wc-1 mRNA')
+
+plt.subplot(4,2,5)
+plt.plot(t, state[:,4])
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.xticks(np.arange(0, 49, 12.0))
+plt.title('WC-1c')
+
+plt.subplot(4,2,6)
+plt.plot(t, state[:,5])
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.xticks(np.arange(0, 49, 12.0))
+plt.title('WC-1n')
+
+plt.subplot(4,2,7)
+plt.plot(t, state[:,6])
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.xticks(np.arange(0, 49, 12.0))
+plt.title('FRQn:WC-1n')
+plt.tight_layout()
 plt.show()
