@@ -25,15 +25,15 @@ rate_constants = {
     'k4'    : 0.23,
     'k5'    : 0.27,
     'k6'    : 0.07,
-    'k7'    : 0.16,
+    'k7'    : 0.5,
     'k8'    : 0.8,
     'k9'    : 40.0,
-    'k10'   : 0.1,
+    'k10'   : 0.3,
     'k11'   : 0.05,
     'k12'   : 0.02,
     'k13'   : 50.0,
     'k14'   : 1.0,
-    'k15'   : 15.0
+    'k15'   : 8.0
 }
 
 dissociation_constants = {
@@ -94,16 +94,22 @@ def clock(state, t, params):
 frq_mrna0    = 4.0
 frq_c0       = 30.0
 frq_n0       = 0.1
-wc1_mrna0    = 1.6
+wc1_mrna0    = (0.5 / 0.3)
 wc1_c0       = 0.03225
 wc1_n0       = 0.35
 frq_n_wc1_n0 = 0.18
 
-state0 = [frq_mrna0,frq_c0,frq_n0,wc1_mrna0,wc1_c0,wc1_n0,frq_n_wc1_n0]
+state0 = [frq_mrna0,
+          frq_c0,
+          frq_n0,
+          wc1_mrna0,
+          wc1_c0,
+          wc1_n0,
+          frq_n_wc1_n0]
 
 ### set time to integrate
 
-t      = np.arange(0,48,0.001)
+t      = np.arange(0,480,0.1)
 
 ### what is a proper time resolution?
 
