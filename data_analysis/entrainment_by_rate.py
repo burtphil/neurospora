@@ -147,6 +147,7 @@ def clock(state, t, params):
         dt_wc1_n        = (rate['k9'] * wc1_c) - (wc1_n * (rate['k12'] + (rate['k13'] * frq_n))) + (rate['k14'] * frq_n_wc1_n)
         dt_frq_n_wc1_n  = rate['k13'] * frq_n * wc1_n - ((rate['k14'] + rate['k15']) * frq_n_wc1_n)
         
+        print(rate['k1'])
         ### derivatives
         
         dt_state = [dt_frq_mrna,
