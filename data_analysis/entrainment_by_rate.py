@@ -15,14 +15,14 @@ from scipy.integrate import odeint
 ### define variables
 
 ### entrainment parameters
-zeitgeber_period = 40
+zeitgeber_period = 26
 warm_dur = 12
 temp_period = warm_dur / zeitgeber_period
 
 ### other parameters
 
 R = 8.314 # gas constant
-t = 0 # time dummy variable
+
 
 
 ### define functions
@@ -34,10 +34,65 @@ def Temp(t):
         return 295.15
     
 #### linear arrhenius eqn for rate constants with temp dependency
-def rate_k(energy,a_factor,t):
-    k = a_factor * np.exp(-energy/(Temp(t)*R))
+def rate_k1(t):
+    k = act_f['A1'] * np.exp(- act_e['E1']/(R * Temp(t)))
     return k
 
+def rate_k2(t):
+    k = act_f['A2'] * np.exp(- act_e['E2']/(R * Temp(t)))
+    return k
+
+def rate_k3(t):
+    k = act_f['A3'] * np.exp(- act_e['E3']/(R * Temp(t)))
+    return k
+
+def rate_k4(t):
+    k = act_f['A4'] * np.exp(- act_e['E4']/(R * Temp(t)))
+    return k
+### function for k5 which behaves not like arrhenius
+def rate_k5(t):
+    dummy = (0.00472727 * Temp(t))-1.1432546
+    return dummy
+
+def rate_k6(t):
+    k = act_f['A6'] * np.exp(- act_e['E6']/(R * Temp(t)))
+    return k
+
+def rate_k7(t):
+    k = act_f['A7'] * np.exp(- act_e['E7']/(R * Temp(t)))
+    return k
+
+def rate_k8(t):
+    k = act_f['A8'] * np.exp(- act_e['E8']/(R * Temp(t)))
+    return k
+
+def rate_k9(t):
+    k = act_f['A9'] * np.exp(- act_e['E9']/(R * Temp(t)))
+    return k
+
+def rate_k10(t):
+    k = act_f['A10'] * np.exp(- act_e['E10']/(R * Temp(t)))
+    return k
+
+def rate_k11(t):
+    k = act_f['A11'] * np.exp(- act_e['E11']/(R * Temp(t)))
+    return k
+
+def rate_k12(t):
+    k = act_f['A12'] * np.exp(- act_e['E12']/(R * Temp(t)))
+    return k
+
+def rate_k13(t):
+    k = act_f['A13'] * np.exp(- act_e['E13']/(R * Temp(t)))
+    return k
+
+def rate_k14(t):
+    k = act_f['A14'] * np.exp(- act_e['E14']/(R * Temp(t)))
+    return k
+
+def rate_k15(t):
+    k = act_f['A15'] * np.exp(- act_e['E15']/(R * Temp(t)))
+    return k
 ### function for K which behaves not like arrhenius
 def rate_K(t):
     if Temp(t) >= 297 :
@@ -45,10 +100,10 @@ def rate_K(t):
     else:
         return 0.02
 
+def rate_K2(t):
+    k = act_f['Ak2'] * np.exp(- act_e['Ek2']/(R * Temp(t)))
+    return k
 ### function for k5 which does not behave like arrhenius
-def rate_k5(t):
-    dummy = (0.00472727 * Temp(t))-1.1432546
-    return dummy
 
 #### dictioniary of activation energies
 act_e = {
@@ -89,30 +144,30 @@ act_f = {
         'Ak2' :1.02814391
 }
 
-
-rate_constants = {
-    'k1'    : rate_k(act_e['E1'],act_f['A1'],t),
-    'k2'    : rate_k(act_e['E2'],act_f['A2'],t),
-    'k3'    : rate_k(act_e['E3'],act_f['A3'],t),
-    'k4'    : rate_k(act_e['E4'],act_f['A4'],t),
-    'k5'    : rate_k5(t),
-    'k6'    : rate_k(act_e['E6'],act_f['A6'],t),
-    'k7'    : rate_k(act_e['E7'],act_f['A7'],t),
-    'k8'    : rate_k(act_e['E8'],act_f['A8'],t),
-    'k9'    : rate_k(act_e['E9'],act_f['A9'],t),
-    'k10'   : rate_k(act_e['E10'],act_f['A10'],t),
-    'k11'   : rate_k(act_e['E11'],act_f['A11'],t),
-    'k12'   : rate_k(act_e['E12'],act_f['A12'],t),
-    'k13'   : rate_k(act_e['E13'],act_f['A13'],t),
-    'k14'   : rate_k(act_e['E14'],act_f['A14'],t),
-    'k15'   : rate_k(act_e['E15'],act_f['A15'],t),
-    'K'     : rate_K(t),
-    'K2'    : rate_k(act_e['Ek2'],act_f['Ak2'],t)
+#### factors in arrhenius eqn w/o temp, note that no k5 and K (not linear dep on arrhenius)
+factors = {
+    'k1'    : rate_k1,
+    'k2'    : rate_k2,
+    'k3'    : rate_k3,
+    'k4'    : rate_k4,
+    'k5'    : rate_k5,
+    'k6'    : rate_k6,
+    'k7'    : rate_k7,
+    'k8'    : rate_k8,
+    'k9'    : rate_k9,
+    'k10'   : rate_k10,
+    'k11'   : rate_k11,
+    'k12'   : rate_k12,
+    'k13'   : rate_k13,
+    'k14'   : rate_k14,
+    'k15'   : rate_k15,
+    'K'     : rate_K,
+    'K2'    : rate_k2
 }
 
 
 params = {
-    'rate_constants': rate_constants
+    'rate_constants': factors
 }
 ### define ODE clock function
 
@@ -138,16 +193,14 @@ def clock(state, t, params):
         
         ###  ODEs Hong et al 2008
         ### letzter summand unklar bei dtfrqmrna
+        dt_frq_mrna     = (rate['k1'](t) * (wc1_n**2) / (rate_K(t) + (wc1_n**2))) - (rate['k4'](t) * frq_mrna) 
+        dt_frq_c        = (rate['k2'](t) * frq_mrna) - (rate['k3'](t) + rate['k5'](t) * frq_c)
+        dt_frq_n        = (rate['k3'](t) * frq_c) + (rate['k14'](t) * frq_n_wc1_n) - (frq_n * (rate['k6'](t) + (rate['k13'](t) * wc1_n)))        
+        dt_wc1_mrna     = rate['k7'](t) - (rate['k10'](t) * wc1_mrna)
+        dt_wc1_c        = ((rate['k8'](t) * frq_c * wc1_mrna) / (rate['K2'](t) + frq_c)) - ((rate['k9'](t) + rate['k11'](t)) * wc1_c)
+        dt_wc1_n        = (rate['k9'](t) * wc1_c) - (wc1_n * (rate['k12'](t) + (rate['k13'](t) * frq_n))) + (rate['k14'](t) * frq_n_wc1_n)
+        dt_frq_n_wc1_n  = rate['k13'](t) * frq_n * wc1_n - ((rate['k14'](t) + rate['k15'](t)) * frq_n_wc1_n)
         
-        dt_frq_mrna     = (rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
-        dt_frq_c        = rate['k2'] * frq_mrna - ((rate['k3'] + rate['k5']) * frq_c)
-        dt_frq_n        = (rate['k3'] * frq_c) + (rate['k14'] * frq_n_wc1_n) - (frq_n * (rate['k6'] + (rate['k13'] * wc1_n)))
-        dt_wc1_mrna     = rate['k7'] - (rate['k10'] * wc1_mrna)
-        dt_wc1_c        = (rate['k8'] * frq_c * wc1_mrna / (rate['K2'] + frq_c)) - ((rate['k9'] + rate['k11']) * wc1_c)
-        dt_wc1_n        = (rate['k9'] * wc1_c) - (wc1_n * (rate['k12'] + (rate['k13'] * frq_n))) + (rate['k14'] * frq_n_wc1_n)
-        dt_frq_n_wc1_n  = rate['k13'] * frq_n * wc1_n - ((rate['k14'] + rate['k15']) * frq_n_wc1_n)
-        
-        print(rate['k1'])
         ### derivatives
         
         dt_state = [dt_frq_mrna,
@@ -167,7 +220,7 @@ def clock(state, t, params):
 frq_mrna0    = 4.0
 frq_c0       = 30.0
 frq_n0       = 0.1
-wc1_mrna0    = rate_constants['k7']/rate_constants['k10']
+wc1_mrna0    = 1.66
 wc1_c0       = 0.03225
 wc1_n0       = 0.35
 frq_n_wc1_n0 = 0.18
