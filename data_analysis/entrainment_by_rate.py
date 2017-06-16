@@ -10,7 +10,7 @@ This temporary script file is located here:
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
-
+import matplotlib.collections as collections
 
 ### define variables
 
@@ -105,7 +105,7 @@ def rate_K2(t):
     return k
 ### function for k5 which does not behave like arrhenius
 
-#### dictioniary of activation energies
+#### dictioniary of activation energies, k5 and K missing
 act_e = {
         'E1'  :62.6,
         'E2'  :20.9,
@@ -124,7 +124,7 @@ act_e = {
         'Ek2' :68.8
 }
     
- ### dicitinoary of prexop factors from arrhenius eqn   
+ ### dicitinoary of prexop factors from arrhenius eqn, k5 and K missing
  
 act_f = {
         'A1'  :1.84603598,
@@ -144,7 +144,7 @@ act_f = {
         'Ak2' :1.02814391
 }
 
-#### factors in arrhenius eqn w/o temp, note that no k5 and K (not linear dep on arrhenius)
+#### dictionary with all rate functions
 factors = {
     'k1'    : rate_k1,
     'k2'    : rate_k2,
@@ -243,63 +243,89 @@ t      = np.arange(0,480,0.1)
 state = odeint(clock,state0,t,args=(params,))  
 
 ### plot all ODEs
+plot_all = plt.subplot(111)
 plt.plot(t,state)
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
 plt.xticks(np.arange(0, 481, 6))
 plt.legend(["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"],loc='center left', bbox_to_anchor=(0.6, 0.5))
+collection = collections.BrokenBarHCollection.span_where(
+    t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
+plot_all.add_collection(collection)
 plt.show()
 
 
-###
+### plot individual osciallations
 plt.figure(figsize=(8,12))
-plt.subplot(4,2,1)
+ax = plt.subplot(4,2,1)
 plt.plot(t, state[:,0])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
 plt.xticks(np.arange(0, 481, 6))
+collection = collections.BrokenBarHCollection.span_where(
+    t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
+ax.add_collection(collection)
 plt.title('frq mRNA')
 
-plt.subplot(4,2,2)
+ax = plt.subplot(4,2,2)
 plt.plot(t, state[:,1])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
 plt.xticks(np.arange(0, 481, 6))
+collection = collections.BrokenBarHCollection.span_where(
+    t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
+ax.add_collection(collection)
 plt.title('FRQc')
 
-plt.subplot(4,2,3)
+ax = plt.subplot(4,2,3)
 plt.plot(t, state[:,2])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
 plt.xticks(np.arange(0, 481, 6))
+collection = collections.BrokenBarHCollection.span_where(
+    t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
+ax.add_collection(collection)
 plt.title('FRQn')
 
-plt.subplot(4,2,4)
+ax = plt.subplot(4,2,4)
 plt.plot(t, state[:,3])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
 plt.xticks(np.arange(0, 481, 6))
+collection = collections.BrokenBarHCollection.span_where(
+    t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
+ax.add_collection(collection)
 plt.title('wc-1 mRNA')
 
-plt.subplot(4,2,5)
+ax = plt.subplot(4,2,5)
 plt.plot(t, state[:,4])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
 plt.xticks(np.arange(0, 481, 6))
+collection = collections.BrokenBarHCollection.span_where(
+    t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
+ax.add_collection(collection)
 plt.title('WC-1c')
 
-plt.subplot(4,2,6)
+ax = plt.subplot(4,2,6)
 plt.plot(t, state[:,5])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
 plt.xticks(np.arange(0, 481, 6))
+collection = collections.BrokenBarHCollection.span_where(
+    t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
+ax.add_collection(collection)
 plt.title('WC-1n')
 
-plt.subplot(4,2,7)
+ax = plt.subplot(4,2,7)
 plt.plot(t, state[:,6])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
 plt.xticks(np.arange(0, 481, 6))
 plt.title('FRQn:WC-1n')
+collection = collections.BrokenBarHCollection.span_where(
+    t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
+ax.add_collection(collection)
+
 plt.tight_layout()
 plt.show()
