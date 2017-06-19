@@ -348,11 +348,11 @@ plt.show()
 ####################################################################
 
 epsilon = 0.01                          ### variable for epsilon ball criterion
-t_state = 85 * zeitgeber_period         ### time after 85 temp cycles
+t_state = 85 * 10 * zeitgeber_period    ### time after 85 temp cycles (time res. is 0.1)
 
 x0 = state[t_state,:]                   ### system at t state
 n_state = state[t_state:,:]             ### new array beginning at t state
-t_ball_pos = []                             ### create empty list store t values in it later
+t_ball_pos = []                         ### create empty list store t values that mach ball criterion
 
 ### for loop that checks if system is similar to x0 
 ### computes the vector of the difference and checks if epsilon criterion is met
@@ -373,13 +373,13 @@ state_names = ['frq mRNA',
                'WC-1c',
                'WC-1n',
                'FRQn:WC-1n']
-
+### convert state array to data frame
 df_state = pd.DataFrame(state, columns = state_names)
 
 ### add time column to data frame df_state
 df_state['time'] = pd.Series(t)
 
-### combine data frame 
+### combine time data frame with t_ball crit pos data frame 
 df_t_ball_pos = pd.DataFrame(t_ball_pos, columns = state_names)
 
-df_all = pd.concat([df_state, df_t_ball_pos], axis=1, join='inner')
+df_merge = pd.merge(df_state, df_t_ball_pos)
