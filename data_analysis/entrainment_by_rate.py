@@ -26,7 +26,7 @@ run_time = 105 * zeitgeber_period
 ### other parameters
 
 R = 8.314 # gas constant
-
+ode_frq = 0.1 ### define frequence for odeint time resolution
 
 
 ### define functions
@@ -240,7 +240,7 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,run_time,0.1)
+t      = np.arange(0,run_time,ode_frq)
 
 ### what is a proper time resolution?
 
@@ -348,7 +348,7 @@ plt.show()
 ####################################################################
 
 epsilon = 0.01                          ### variable for epsilon ball criterion
-t_state = 85 * 10 * zeitgeber_period    ### time after 85 temp cycles (time res. is 0.1)
+t_state = 85 * ode_frq * zeitgeber_period    ### time after 85 temp cycles (time res. is 0.1)
 
 x0 = state[t_state,:]                   ### system at t state
 n_state = state[t_state:,:]             ### new array beginning at t state
@@ -383,3 +383,19 @@ df_state['time'] = pd.Series(t)
 df_t_ball_pos = pd.DataFrame(t_ball_pos, columns = state_names)
 
 df_merge = pd.merge(df_state, df_t_ball_pos)
+
+### get only time column
+
+times = df_merge['time']
+### convert time column to array
+times = np.array(times)
+### get differences between t_n and t_n+1
+times_diff = np.diff(times)
+
+### calculate the mean of the differences and divide by zeitgeber period
+
+times_mean = np.mean(times_diff)
+
+### define final entrainment criterion
+
+entrain_crit = times_mean / zeitgeber_period
