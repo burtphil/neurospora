@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 import matplotlib.collections as collections
+import pandas as pd
 
 ####################################################################
 ############# define variables and dictionaries #########################
@@ -345,18 +346,40 @@ plt.show()
 ####################################################################
 ############# study entrainment properties #########################
 ####################################################################
-epsilon = 0.01 ### variable for epsilon ball criterion
-t_state = 85 * zeitgeber_period ### time after 85 temp cycles
 
-x0 = state[t_state,:] ### system at t state
-n_state = state[t_state:,:] ### new array beginning at t state
-t_list = [] ### create empty list store t values in it
+epsilon = 0.01                          ### variable for epsilon ball criterion
+t_state = 85 * zeitgeber_period         ### time after 85 temp cycles
+
+x0 = state[t_state,:]                   ### system at t state
+n_state = state[t_state:,:]             ### new array beginning at t state
+t_ball_pos = []                             ### create empty list store t values in it later
 
 ### for loop that checks if system is similar to x0 
-### computes the vector of the difference
+### computes the vector of the difference and checks if epsilon criterion is met
+
 for i in n_state:
     diff = x0 - i
     if np.linalg.norm(diff) < epsilon:
-        t_list.append(i)
+        t_ball_pos.append(i)
         
-t_list = np.array(t_list)
+t_ball_pos = np.array(t_ball_pos)
+
+### make state to a pandas df
+
+state_names = ['frq mRNA',
+               'FRQc',
+               'FRQn',
+               'wc-1 mRNA',
+               'WC-1c',
+               'WC-1n',
+               'FRQn:WC-1n']
+
+df_state = pd.DataFrame(state, columns = state_names)
+
+### add time column to data frame df_state
+df_state['time'] = pd.Series(t)
+
+### combine data frame 
+df_t_ball_pos = pd.DataFrame(t_ball_pos, columns = state_names)
+
+df_all = pd.concat([df_state, df_t_ball_pos], axis=1, join='inner')
