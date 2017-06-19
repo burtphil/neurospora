@@ -12,13 +12,16 @@ import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 import matplotlib.collections as collections
 
-### define variables
+####################################################################
+############# define variables and dictionaries #########################
+####################################################################
 
 ### entrainment parameters
 zeitgeber_period = 26
 warm_dur = 12
 temp_period = warm_dur / zeitgeber_period
 
+run_time = 105 * zeitgeber_period
 ### other parameters
 
 R = 8.314 # gas constant
@@ -169,9 +172,10 @@ factors = {
 params = {
     'rate_constants': factors
 }
-### define ODE clock function
 
-### write a function of Temperature depending on time: Temp(t)
+####################################################################
+############# definde ODE system           #########################
+####################################################################
 
 
 ### and a function of rate dependency on T: k(T(t))
@@ -235,19 +239,26 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,480,0.1)
+t      = np.arange(0,run_time,0.1)
 
 ### what is a proper time resolution?
 
 ### run simulation
 state = odeint(clock,state0,t,args=(params,))  
 
+
+
+
+####################################################################
+############# plot ODE system over time    #########################
+####################################################################
+
 ### plot all ODEs
 plot_all = plt.subplot(111)
 plt.plot(t,state)
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
-plt.xticks(np.arange(0, 481, 6))
+plt.xticks(np.arange(0, (run_time + 1), 6))
 plt.legend(["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"],loc='center left', bbox_to_anchor=(0.6, 0.5))
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
@@ -261,7 +272,7 @@ ax = plt.subplot(4,2,1)
 plt.plot(t, state[:,0])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
-plt.xticks(np.arange(0, 481, 6))
+plt.xticks(np.arange(0, (run_time + 1), 6))
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
 ax.add_collection(collection)
@@ -271,7 +282,7 @@ ax = plt.subplot(4,2,2)
 plt.plot(t, state[:,1])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
-plt.xticks(np.arange(0, 481, 6))
+plt.xticks(np.arange(0, (run_time + 1), 6))
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
 ax.add_collection(collection)
@@ -281,7 +292,7 @@ ax = plt.subplot(4,2,3)
 plt.plot(t, state[:,2])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
-plt.xticks(np.arange(0, 481, 6))
+plt.xticks(np.arange(0, (run_time + 1), 6))
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
 ax.add_collection(collection)
@@ -291,7 +302,7 @@ ax = plt.subplot(4,2,4)
 plt.plot(t, state[:,3])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
-plt.xticks(np.arange(0, 481, 6))
+plt.xticks(np.arange(0, (run_time + 1), 6))
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
 ax.add_collection(collection)
@@ -301,7 +312,7 @@ ax = plt.subplot(4,2,5)
 plt.plot(t, state[:,4])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
-plt.xticks(np.arange(0, 481, 6))
+plt.xticks(np.arange(0, (run_time + 1), 6))
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
 ax.add_collection(collection)
@@ -311,7 +322,7 @@ ax = plt.subplot(4,2,6)
 plt.plot(t, state[:,5])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
-plt.xticks(np.arange(0, 481, 6))
+plt.xticks(np.arange(0, (run_time + 1), 6))
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
 ax.add_collection(collection)
@@ -321,7 +332,7 @@ ax = plt.subplot(4,2,7)
 plt.plot(t, state[:,6])
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
-plt.xticks(np.arange(0, 481, 6))
+plt.xticks(np.arange(0, (run_time + 1), 6))
 plt.title('FRQn:WC-1n')
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % zeitgeber_period) <= warm_dur), facecolor='gray', alpha=0.2)
@@ -329,3 +340,23 @@ ax.add_collection(collection)
 
 plt.tight_layout()
 plt.show()
+
+
+####################################################################
+############# study entrainment properties #########################
+####################################################################
+epsilon = 0.01 ### variable for epsilon ball criterion
+t_state = 85 * zeitgeber_period ### time after 85 temp cycles
+
+x0 = state[t_state,:] ### system at t state
+n_state = state[t_state:,:] ### new array beginning at t state
+t_list = [] ### create empty list store t values in it
+
+### for loop that checks if system is similar to x0 
+### computes the vector of the difference
+for i in n_state:
+    diff = x0 - i
+    if np.linalg.norm(diff) < epsilon:
+        t_list.append(i)
+        
+t_list = np.array(t_list)
