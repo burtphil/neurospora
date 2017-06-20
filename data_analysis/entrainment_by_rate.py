@@ -26,7 +26,7 @@ run_time = 105 * zeitgeber_period
 ### other parameters
 
 R = 8.314 # gas constant
-ode_frq = 0.1 ### define frequence for odeint time resolution
+ode_frq = 10 ### define frequency for odeint time resolution
 
 
 ### define functions
@@ -240,7 +240,7 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,run_time,ode_frq)
+t      = np.arange(0,run_time,0.01)
 
 ### what is a proper time resolution?
 
@@ -347,10 +347,18 @@ plt.show()
 ############# study entrainment properties #########################
 ####################################################################
 
-epsilon = 0.01                          ### variable for epsilon ball criterion
-t_state = 85 * ode_frq * zeitgeber_period    ### time after 85 temp cycles (time res. is 0.1)
+### purpose: implement epsilon ball criterion that checks if state vector x0
+###          returns to the same state in a given epsilon ball
+###          then measure times, at which system returns to state0 and measure
+###          periods between these time points. then compare by taking the
+###          average period length and dividing by zeitgeber period.
+###          entrainment occurs if result is ca. 1
 
-x0 = state[t_state,:]                   ### system at t state
+
+epsilon = 0.01                          ### variable for epsilon ball criterion
+t_state = 85 * 10 * zeitgeber_period    ### time after 85 temp cycles (time res. is 0.1)
+
+x0 = state[t_state,:]                   ### system at t state x0
 n_state = state[t_state:,:]             ### new array beginning at t state
 t_ball_pos = []                         ### create empty list store t values that mach ball criterion
 
@@ -373,6 +381,7 @@ state_names = ['frq mRNA',
                'WC-1c',
                'WC-1n',
                'FRQn:WC-1n']
+
 ### convert state array to data frame
 df_state = pd.DataFrame(state, columns = state_names)
 
@@ -399,3 +408,45 @@ times_mean = np.mean(times_diff)
 ### define final entrainment criterion
 
 entrain_crit = times_mean / zeitgeber_period
+
+### entrainment crit should be close to 1 if entrained
+### next step: test entrainment for different thermoperiods and zetgeber periods
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
