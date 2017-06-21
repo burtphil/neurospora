@@ -11,9 +11,9 @@ list = []
 def func(warm, zeit):    
     crit = warm + zeit
     if crit < 25:
-        return [warm, zeit, crit, True]
+        return [True]
     else:
-        return [warm, zeit, crit, False]
+        return [False]
 
 for i in range(10):
     zeitgeber_period = 18 + i

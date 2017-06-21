@@ -18,3 +18,19 @@ def func(a,b):
 
 plt.pcolormesh(X,Y,func(X,Y))
 plt.show()
+
+
+
+list = []
+
+
+def loop(warm, zeit):    
+    crit = warm + zeit
+    if crit < 25:
+        return [True]
+    else:
+        return [False]
+
+for i in x:
+    for j in y:
+        list.append(loop(i, j))
