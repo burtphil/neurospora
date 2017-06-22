@@ -19,7 +19,7 @@ def func(a,b):
 plt.pcolormesh(X,Y,func(X,Y))
 plt.show()
 
-
+Z = np.zeros_like(X)
 
 list = []
 
@@ -34,3 +34,10 @@ def loop(warm, zeit):
 for i in x:
     for j in y:
         list.append(loop(i, j))
+
+### make a for loop with enumerate
+ints = [8, 23, 45, 12, 78]
+
+for idx, valx in enumerate(x):
+    for idy, valy in enumerate(y):
+        Z[idx,idy] = valx + valy

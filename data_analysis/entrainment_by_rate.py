@@ -18,8 +18,8 @@ import pandas as pd
 ####################################################################
 
 ### entrainment parameters
-zeitgeber_period = 26
-warm_dur = 12
+zeitgeber_period = 22
+warm_dur = 11
 temp_period = warm_dur / zeitgeber_period
 
 run_time = 105 * zeitgeber_period
@@ -240,7 +240,7 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,run_time,0.01)
+t      = np.arange(0,run_time,0.1)
 
 ### what is a proper time resolution?
 
@@ -406,8 +406,13 @@ times_diff = np.diff(times)
 times_mean = np.mean(times_diff)
 
 ### define final entrainment criterion
-
 entrain_crit = times_mean / zeitgeber_period
+entrain = 0
+if entrain_crit < 1.1 and entrain_crit > 0.9:
+    entrain = 1
+else:
+    entrain = 0
+    
 
 ### entrainment crit should be close to 1 if entrained
 ### next step: test entrainment for different thermoperiods and zetgeber periods
