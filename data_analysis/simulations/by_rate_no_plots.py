@@ -17,10 +17,11 @@ import pandas as pd
 ####################################################################
 
 ### entrainment parameters
-zeitgeber_period = 26
-warm_dur = 12
+zeitgeber_period = 21.60
+warm_dur = 17.33
 temp_period = warm_dur / zeitgeber_period
 
+run_time = 105 * zeitgeber_period
 ### other parameters
 
 R = 8.314 # gas constant
@@ -236,6 +237,36 @@ state0 = [frq_mrna0,
           wc1_n0,
           frq_n_wc1_n0]
 
+### set time to integrate
+
+t      = np.arange(0,run_time,0.1)
+
+### what is a proper time resolution?
+
+### run simulation
+state = odeint(clock,state0,t,args=(params,))  
+
+
+
+epsilon = 0.01                          ### variable for epsilon ball criterion
+t_state = int(85 * 10 * zeitgeber_period)    ### time after 85 temp cycles (time res. is 0.1)
+
+x0 = state[t_state,:]                   ### system at t state x0
+n_state = state[t_state:,:]             ### new array beginning at t state
+t_ball_pos = []                         ### create empty list store t values that mach ball criterion
+
+### for loop that checks if system is similar to x0 
+### computes the vector of the difference and checks if epsilon criterion is met
+
+for i in n_state:
+    diff = x0 - i
+    if np.linalg.norm(diff) < epsilon:
+        t_ball_pos.append(i)
+        
+t_ball_pos = np.array(t_ball_pos)
+
+### make state to a pandas df
+
 state_names = ['frq mRNA',
                'FRQc',
                'FRQn',
@@ -244,80 +275,64 @@ state_names = ['frq mRNA',
                'WC-1n',
                'FRQn:WC-1n']
 
-zeitgeber = np.linspace(15,30,16)
-thermo_period = np.linspace(0,1,20)
+### convert state array to data frame
+df_state = pd.DataFrame(state, columns = state_names)
 
-zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,thermo_period)
+### add time column to data frame df_state
+df_state['time'] = pd.Series(t)
 
-entrain_mesh = np.zeros_like(zeit_mesh)
+### combine time data frame with t_ball crit pos data frame 
+df_t_ball_pos = pd.DataFrame(t_ball_pos, columns = state_names)
 
-for idx, valx in enumerate(zeitgeber):
-    for idy, valy in enumerate(thermo_period):
-        
-        zeitgeber_period = valx
-        warm_dur = zeitgeber_period * valy
-        t      = np.linspace(0,(105 * zeitgeber_period),(1050 * zeitgeber_period))
-        state = odeint(clock,state0,t,args=(params,))
-         
-        epsilon = 0.01                                      ### variable for epsilon ball criterion
-        t_state = int(85 * 10 * zeitgeber_period)                            ### time after 85 temp cycles (time res. is 0.1)
-        x0 = state[t_state,:]                               ### system at t state x0
-        n_state = state[t_state:,:]                         ### new array beginning at t state
-        t_ball_pos = []                                     ### create empty list store t values that mach ball criterion
+df_merge = pd.merge(df_state, df_t_ball_pos)
 
-        for i in n_state:
-            diff = x0 - i
-            if np.linalg.norm(diff) < epsilon:
-                t_ball_pos.append(i)
-        
-        t_ball_pos = np.array(t_ball_pos)
+### get only time column
+
+times = df_merge['time']
+### convert time column to array
+times = np.array(times)
+### get differences between t_n and t_n+1
+times_diff = np.diff(times)
+
+### calculate the mean of the differences and divide by zeitgeber period
+
+times_mean = np.mean(times_diff)
+
+### define final entrainment criterion
+entrain_crit = times_mean / zeitgeber_period
+entrain = 0
+if entrain_crit < 1.1 and entrain_crit > 0.9:
+    entrain = 1
+else:
+    entrain = 0
+
+print "zeitgeber = " + str(zeitgeber_period)    
+print "entrain = " + str(entrain)
+print "n state = " + str(n_state.shape)
+print "shape tball = " + str(t_ball_pos.shape)
+print "entrain crit = " + str(entrain_crit)
+### entrainment crit should be close to 1 if entrained
+### next step: test entrainment for different thermoperiods and zetgeber periods
 
 
 
-        df_state = pd.DataFrame(state, columns = state_names)
 
-        ### add time column to data frame df_state
-        df_state['time'] = pd.Series(t)
 
-        ### combine time data frame with t_ball crit pos data frame 
-        df_t_ball_pos = pd.DataFrame(t_ball_pos, columns = state_names)
 
-        df_merge = pd.merge(df_state, df_t_ball_pos)
 
-        ### get only time column
 
-        times = df_merge['time']
-        ### convert time column to array
-        times = np.array(times)
-        ### get differences between t_n and t_n+1
-        times_diff = np.diff(times)
 
-        ### calculate the mean of the differences and divide by zeitgeber period
 
-        times_mean = np.mean(times_diff)
 
-        ### define final entrainment criterion
-        entrain_crit = times_mean / zeitgeber_period
-        entrain = 0.5
-        if entrain_crit < 1.1 and entrain_crit > 0.9:
-            entrain = 1
-        else:
-            entrain = 0
-            
-        print("zeitgeber period = ",zeitgeber_period)
-        print("thermoperiod = ", valy)
-        print("entrain = ", entrain)
-#        print("entrain_crit = ",entrain_crit)
-#        print("entrain = ",entrain)
-#        print("t_state = ",t_state)
-#        print("run_time = ", run_time)
-        print("")
-        
-        entrain_mesh[idy,idx] = entrain
 
-plt.pcolormesh(zeit_mesh,warm_mesh, entrain_mesh, edgecolors = "k", vmin = 0, vmax = 1)
-plt.colorbar()
-plt.show()
+
+
+
+
+
+
+
+
 
 
 
