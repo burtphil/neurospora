@@ -244,8 +244,8 @@ state_names = ['frq mRNA',
                'WC-1n',
                'FRQn:WC-1n']
 
-zeitgeber = np.linspace(15,30,16)
-thermo_period = np.linspace(0,1,20)
+zeitgeber = np.linspace(15,30,151)
+thermo_period = np.linspace(0,1,51)
 
 zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,thermo_period)
 
