@@ -186,10 +186,10 @@ plt.show()
 dummy = np.array([0,1,2,3,4,5,6])
 
 ### make empty dictionaries to later populate with amplitudes, periods and phases
-amplitudes = {}
-periods = {}
-phases = {}
-mean_oscillation = {}
+amplitudes_dict = {}
+periods_dict = {}
+phases_dict = {}
+mean_oscillation_dict = {}
 
 ### define a new state array to exlude transients in model
 ### exculde first 1600 ode iterations
@@ -220,8 +220,8 @@ for idx, valx in enumerate(state_names):
     
     ### get the position of the local maxima and calculate distance between them
     ### then take mean and divide by integration frequency which is set to 10
-    periods[valx] = local_maxima_distance / 10.0
-    amplitudes[valx] = (local_maxima_mean - local_minima_mean) / 2
+    periods_dict[valx] = local_maxima_distance / 10.0
+    amplitudes_dict[valx] = (local_maxima_mean - local_minima_mean) / 2
     
     
     ### calculate the phase as the difference between two maxima
@@ -230,12 +230,15 @@ for idx, valx in enumerate(state_names):
         phase = first_local_maxima_idx - frq_mrna_maxima_idx
     ### if the elements of the returned array are negative do it the other way around
     
-        if np.sum(phases) < 0 :
+        if np.sum(phase) < 0 :
             phase = frq_mrna_maxima_idx - first_local_maxima_idx
 
         relative_phase = np.mean(phase) / local_maxima_distance
-        phases[valx] = relative_phase
+        phases_dict[valx] = relative_phase
+        assert relative_phase >= 0
     else:
-        phases[valx] = np.nan
-    
-periods
+        phases_dict[valx] = np.nan
+
+
+
+
