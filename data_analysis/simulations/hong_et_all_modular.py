@@ -10,9 +10,27 @@ Created on Thu Jul 20 14:00:15 2017
 
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+import math
 from scipy.integrate import odeint
 from scipy.signal import argrelextrema
+
+
+### define model variable names used in dictionaries
+
+state_names = ["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n",
+               "FRQn:WC-1n"]
+
+phase_names = ["phase frq mRNA","phase FRQc","phase FRQn","phase wc-1 mRNA",
+               "phase WC-1c","phase WC-1n","phase FRQn:WC-1n"]
+
+amp_names = ["amplitude frq mRNA","amplitude FRQc","amplitude FRQn",
+             "amplitude wc-1 mRNA","amplitude WC-1c","amplitude WC-1n"
+             ,"amplitude FRQn:WC-1n"]
+
+per_names = ["period frq mRNA","period FRQc","period FRQn","period wc-1 mRNA",
+             "period WC-1c","period WC-1n","period FRQn:WC-1n"]
 
 ### dictionary of parameters
 
@@ -39,15 +57,6 @@ rate = {
 }
 
 
-#### dummy dictionaries
-
-period_dict = {}
-amp_dict = {}
-phase_dict = {}
-params_plus = {}
-params_minus = {}
-
-
 
 #### functions
 ##############################################################################
@@ -59,7 +68,7 @@ def write_var(state):
     get_phase(state)
     
 
-def make_amp_dict(state):
+def make_amp_dict(state,ref_state):
     """
     Take state variable from ode simulation
     Calls amplitude function
@@ -67,12 +76,20 @@ def make_amp_dict(state):
     """
     amp_dict = {}
     no_trans = remove_trans(state)
-    for idx, valx in enumerate(state_names):
+    
+    for idx, valx in enumerate(amp_names):
         current_state = no_trans[:,idx]
-        amp_dict[valx] = get_amp(current_state)
+        
+        if get_amp(ref_state[:,idx]) != 0:
+            rel_amp = rel_difference(get_amp(current_state), get_amp(ref_state[:,idx]))
+            amp_dict[valx] = rel_amp * 100
+        else:
+
+            amp_dict[valx] = 0
+            
     return amp_dict    
     
-def make_phase_dict(state):
+def make_phase_dict(state,ref_state):
     """
     Take state variable from ode simulation
     Calls phase function
@@ -81,12 +98,19 @@ def make_phase_dict(state):
     phase_dict = {}
     no_trans = remove_trans(state)
     frq_mrna_state = no_trans[:,0]
-    for idx, valx in enumerate(state_names):
+    
+    for idx, valx in enumerate(phase_names):
         current_state = no_trans[:,idx]
-        phase_dict[valx]= get_phase(current_state, frq_mrna_state)
+        
+        if get_phase(ref_state[:,idx],ref_state[:,0]) != 0:
+            rel_phase = rel_difference(get_phase(current_state, frq_mrna_state),get_phase(ref_state[:,idx],ref_state[:,0]))
+            phase_dict[valx]= rel_phase * 100
+        else:    
+            phase_dict[valx]= 0
+
     return phase_dict
 
-def make_period_dict(state):
+def make_period_dict(state, ref_state):
     """
     Take state variable from ode simulation
     Calls period function
@@ -94,18 +118,27 @@ def make_period_dict(state):
     """
     period_dict = {}
     no_trans = remove_trans(state)  
-    for idx, valx in enumerate(state_names):
+    
+    for idx, valx in enumerate(per_names):
         current_state = no_trans[:,idx]
-        period_dict[valx]=get_period(current_state)
+        
+        if get_period(ref_state[:,idx]) != 0:
+            rel_per = rel_difference(get_period(current_state), get_period(ref_state[:,idx]))
+            period_dict[valx] = rel_per * 100
+        else:
+            period_dict[valx] = 0
+            
     return period_dict
 
 def get_period(current_state):   
     """
     Take column of state variable from ode simulation
     calculate period by calculating distance between local maxima (see maxima_dist fct)
-    Returns period of input variable
+    Returns mean period of input variable
     """
     period = maxima_dist(current_state) / 10.0
+   # assert math.isnan(period) == False
+    
     return period
 
     
@@ -116,6 +149,8 @@ def get_amp(current_state):
     Returns mean of amplitudes of input variable
     """
     amp = (get_maxima(current_state) - get_minima(current_state)) / 2
+    #assert math.isnan(amp) == False
+    
     return amp
 
 def get_phase(current_state, frq_mrna_state):
@@ -140,8 +175,20 @@ def get_phase(current_state, frq_mrna_state):
         phase = relative_phase
         assert relative_phase >= 0      
     else:
-        phase = np.nan
+        phase = 0
+        
+    #assert math.isnan(phase) == False
+    
     return phase
+
+def rel_difference(value, ref_value):
+    """
+    Return the relative difference
+    """
+    assert ref_value != 0
+    rel_diff = (value - ref_value) / ref_value
+    
+    return rel_diff
 
 def get_maxima_idx(current_state):
     """
@@ -152,6 +199,7 @@ def get_maxima_idx(current_state):
     maxima_idx = np.ravel(np.array(argrelextrema(current_state, np.greater)))
     return maxima_idx
 
+
 def get_maxima(current_state):
     """
     Take column of state variable from ode simulation
@@ -159,7 +207,10 @@ def get_maxima(current_state):
     Returns mean of local maxima
     """
     maxima = current_state[argrelextrema(current_state, np.greater)[0]]
-    return np.mean(maxima)
+    if maxima.any():
+        return np.mean(maxima)
+    else:
+        return 0
 
 def get_minima(current_state):
     """
@@ -168,7 +219,10 @@ def get_minima(current_state):
     Returns mean of local minima
     """
     minima = current_state[argrelextrema(current_state, np.less)[0]]
-    return np.mean(minima)
+    if minima.any():
+        return np.mean(minima)
+    else:
+        return 0 
 
 def maxima_dist(current_state):
     """
@@ -177,7 +231,10 @@ def maxima_dist(current_state):
     Return mean of distance between maxima
     """
     maxima_dist = np.mean(np.diff(get_maxima_idx(current_state)))
-    return maxima_dist
+    if maxima_dist.any():
+        return maxima_dist
+    else: 
+        return 0
     
 def remove_trans(state):
     """
@@ -264,18 +321,114 @@ state = odeint(clock,state0,t,args=(rate,))
 
 state_names = ["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"]
 
+var_dict_plus = rate.copy()
+var_dict_minus = rate.copy()
+
 ### run a simulation varying each parameter of the model susequently by +- 10 percent
+### initiate a reference state from the simulation with original parameters
+
+ref_state = remove_trans(state)
 
 for key in rate:
+    """
+    for each parameter in model, change its value +-10% and calculate amplitudes,
+    periods and phase for each model variable. store everything in a nested dict
+    that contains the parameter as main key 
+    """
+    
+    ### copy the original rate dictionary
     params_plus = rate.copy()
     params_minus = rate.copy()
+    
+    #### change parameter values in copied dicts
     params_plus[key] = params_plus[key] * 1.1
     params_minus[key] = params_minus[key] * 0.9
+    
+    ### run simulation with new parameters
     state_plus = odeint(clock,state0,t,args=(params_plus,))
     state_minus = odeint(clock,state0,t,args=(params_minus,))
-    print make_phase_dict(state_plus)
+    
+    ### get amplitude period and phase for each variable
+    amp_dict_plus = make_amp_dict(state_plus, ref_state)
+    per_dict_plus = make_period_dict(state_plus, ref_state)
+    phase_dict_plus = make_phase_dict(state_plus, ref_state)
+    
+    amp_dict_minus = make_amp_dict(state_minus, ref_state)
+    per_dict_minus = make_period_dict(state_minus, ref_state)
+    phase_dict_minus = make_phase_dict(state_minus, ref_state)
+    
+    #### combine amp phase and per into dictionary
+    var_dict_plus[key] = dict(amp_dict_plus.items() + per_dict_plus.items() + phase_dict_plus.items())
+    var_dict_minus[key] = dict(amp_dict_minus.items() + per_dict_minus.items() + phase_dict_minus.items())
+
+### convert dictionaries of parameter changes into pandas dfs   
+var_plus_df = pd.DataFrame.from_dict(var_dict_plus, orient='index')
+var_minus_df = pd.DataFrame.from_dict(var_dict_minus, orient='index')
+
+### take column header names and add either + or -
+var_plus_df_names = list(var_plus_df.columns.values)
+var_minus_df_names = list(var_minus_df.columns.values)
+
+for idx,n in enumerate(var_minus_df_names):   
+    var_minus_df_names[idx] = n + " -"
+
+for idx,n in enumerate(var_plus_df_names):   
+    var_plus_df_names[idx] = n + " +"
 
     
+var_plus_df.columns = var_plus_df_names
+var_minus_df.columns = var_minus_df_names
+
+
+### combine data frames
+var_df = pd.concat([var_plus_df,var_minus_df], axis = 1)
+
+# Create a Pandas Excel writer using XlsxWriter as the engine.
+writer = pd.ExcelWriter('hong_robustness.xlsx', engine='xlsxwriter')
+
+# Convert the dataframe to an XlsxWriter Excel object.
+var_df.to_excel(writer, sheet_name='Sheet1')
+
+workbook  = writer.book
+worksheet = writer.sheets['Sheet1']
+
+# Light red fill with dark red text.
+format_red = workbook.add_format({'bg_color': '#FFC7CE'})
+
+format_dark_red = workbook.add_format({'bg_color': '#9C0006'})
+
+
+# Add a format. Green fill with dark green text.
+format_green = workbook.add_format({'bg_color': '#C6EFCE'})
+    
+format_dark_green = workbook.add_format({'bg_color': '#006100'})
+
+    
+worksheet.conditional_format('B2:AQ18', {'type':     'cell',
+                                    'criteria': 'between',
+                                    'minimum':      1,
+                                    'maximum':      50,
+                                    'format':    format_red})
+
+worksheet.conditional_format('B2:AQ18', {'type':     'cell',
+                                    'criteria': 'greater than',
+                                    'value':     50,
+                                    'format':    format_dark_red})
+
+    
+worksheet.conditional_format('B2:AQ18', {'type':     'cell',
+                                    'criteria': 'between',
+                                    'minimum':     -50,
+                                    'maximum':      -1,
+                                    'format':    format_green})
+
+worksheet.conditional_format('B2:AQ18', {'type':     'cell',
+                                    'criteria': 'less than',
+                                    'value':     -50,
+                                    'format':    format_dark_green})
+
+    
+workbook.close()
  
 ##############################################################################
 ##############################################################################
