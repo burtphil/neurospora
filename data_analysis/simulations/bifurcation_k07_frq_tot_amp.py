@@ -180,7 +180,7 @@ def remove_trans(state):
     Remove transients from state variable
     Return state variable without transients
     """
-    return np.array(state[1600:,:])
+    return np.array(state[160000:,:])
 
 def clock(state, t, rate):
 
@@ -250,7 +250,7 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,480,0.1)
+t      = np.arange(0,48000,0.1)
 
 
 
@@ -260,24 +260,50 @@ t      = np.arange(0,480,0.1)
 ##############################################################################
 ### bifurcation analysis
 
-bif_array = np.linspace(0,0.7,100)
-flip_bif_array = np.flip(bif_array,0)
-max_array = np.empty_like(bif_array)
-min_array = np.empty_like(bif_array)
+### initialize parameter array
+bif_array = np.concatenate((np.linspace(0,0.07999,100),np.linspace(0.08,0.1,200),
+                      np.linspace(0.10001,0.55,100),np.linspace(0.550001,0.65,200),
+                      np.linspace(0.650001,0.7,50)))
+
+
+#### dummy arrays to be filled after simulation steps
+frq_tot_max_array = np.empty_like(bif_array)
+frq_tot_min_array = np.empty_like(bif_array)
+
+wc1_tot_max_array = np.empty_like(bif_array)
+wc1_tot_min_array = np.empty_like(bif_array)
+
+period_frq_tot_array = np.empty_like(bif_array)
+
+### dummy arrays for reverse bifurcation analysis
 max_array_flip = np.empty_like(bif_array)
 min_array_flip = np.empty_like(bif_array)
-period_array = np.empty_like(bif_array)
+flip_bif_array = np.flip(bif_array,0)
+
 params = rate.copy()
 
 for idx, valx in enumerate(bif_array):
     params['k7'] = valx
     state = odeint(clock,state0,t,args=(params,))
     state_notrans = remove_trans(state)
-    current_state = state_notrans[:,1] + state_notrans[:,2]
-    max_array[idx] = get_maxima(current_state)
-    min_array[idx] = get_minima(current_state)
-    period_array[idx] = get_period(current_state)
-
+    
+    ### store maxima and minima after each simulation step
+    frq_tot = state_notrans[:,1] + state_notrans[:,2]
+    frq_tot_max_array[idx] = get_maxima(frq_tot)
+    frq_tot_min_array[idx] = get_minima(frq_tot)
+    
+    wc1_tot = state_notrans[:,4] + state_notrans[:,5]
+    wc1_tot_max_array[idx] = get_maxima(wc1_tot)
+    wc1_tot_min_array[idx] = get_minima(wc1_tot)
+    
+    ### criterion for the period to be defined
+    if (frq_tot_max_array[idx] - frq_tot_min_array[idx] > 5):
+        period_frq_tot_array[idx] = get_period(frq_tot)
+    else: period_frq_tot_array[idx] = np.nan
+    
+###
+#check if bifurcation behaves differently if I iterate reverse over the parameter
+"""
 for idx, valx in enumerate(flip_bif_array):
     params['k7'] = valx
     state = odeint(clock,state0,t,args=(params,))
@@ -285,41 +311,55 @@ for idx, valx in enumerate(flip_bif_array):
     current_state = state_notrans[:,1] + state_notrans[:,2]
     max_array_flip[idx] = get_maxima(current_state)
     min_array_flip[idx] = get_minima(current_state)
+"""
 
 
-frq_tot = np.column_stack((max_array,min_array))
-frq_tot_flip = np.column_stack((max_array_flip,min_array_flip))
 ##############################################################################
 ##############################################################################
-state = odeint(clock,state0,t,args=(rate,))
+
 ### plot the bifurcation
 
 plt.figure(figsize=(8,12))
 plt.subplot(2,2,1)
-plt.plot(bif_array, frq_tot)
-plt.xlabel("k7")
-plt.ylabel("FRQ tot")
-plt.title('FRQ tot ')
+plt.plot(bif_array, frq_tot_max_array, 'k', bif_array, frq_tot_min_array, 'k',
+         bif_array, wc1_tot_max_array, 'c', bif_array, wc1_tot_min_array, 'c')
+plt.xlabel("rate of wc-1 overexpression, k7")
+plt.ylabel("$[FRQ]_{tot}$, [WC-1]tot, a.u.")
+plt.xlim([0,0.7])
+plt.ylim([0,40])
 
 plt.subplot(2,2,2)
-plt.plot(flip_bif_array, frq_tot_flip)
-plt.xlabel("k7")
-plt.ylabel("FRQ tot")
-plt.title('FRQ tot flip')
+plt.plot(bif_array, wc1_tot_max_array, 'k',bif_array, wc1_tot_min_array, 'k')
+plt.xlabel("rate of wc-1 overexpression, k7")
+plt.ylabel("[WC-1]tot, a.u.")
+plt.xlim([0,0.7])
+plt.ylim([0,5])
 
 plt.subplot(2,2,3)
+plt.plot(bif_array, frq_tot_max_array, 'k', bif_array, frq_tot_min_array, 'k')
+plt.xlabel("rate of wc-1 overexpression, k7")
+plt.ylabel("[FRQ]tot, a.u.")
+plt.xlim([0,0.7])
+plt.ylim([0,40])
+
+plt.subplot(2,2,4)
+plt.plot(bif_array, period_frq_tot_array)
+plt.ylim([14,28])
+plt.xlim([0,0.7])
+plt.xlabel("rate of wc-1 overexpression, k7")
+plt.ylabel("period, h")
+
+
+plt.show()
+
+### plot original simulation
+"""
+state = odeint(clock,state0,t,args=(rate,))
+
 plt.plot(t,state)
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
-plt.title('original simulation')
+plt.xticks(np.arange(0, 49, 12.0))
 plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
-
-
-plt.subplot(2,2,4)
-plt.plot(bif_array, period_array)
-plt.ylim([14,28])
-plt.xlabel("k7")
-plt.ylabel("FRQ tot period")
-plt.title('FRQ tot period ')
-
 plt.show()
+"""

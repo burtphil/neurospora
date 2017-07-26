@@ -358,6 +358,7 @@ for key in rate:
     phase_dict_minus = make_phase_dict(state_minus, ref_state)
     
     #### combine amp phase and per into dictionary
+    ### dict contains parameter as key and a dict with amp per and phase key value pairs
     var_dict_plus[key] = dict(amp_dict_plus.items() + per_dict_plus.items() + phase_dict_plus.items())
     var_dict_minus[key] = dict(amp_dict_minus.items() + per_dict_minus.items() + phase_dict_minus.items())
 

@@ -276,8 +276,10 @@ for idx, valx in enumerate(bif_array):
     current_state = state_notrans[:,1]
     max_array[idx] = get_maxima(current_state)
     min_array[idx] = get_minima(current_state)
-    period_array[idx] = get_period(current_state)
-
+    if max_array[idx] - min_array[idx] > 0.5 :
+        period_array[idx] = get_period(current_state)
+    else: period_array[idx] = np.nan
+    
 for idx, valx in enumerate(flip_bif_array):
     params['k01'] = valx
     state = odeint(clock,state0,t,args=(params,))
