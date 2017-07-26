@@ -20,3 +20,8 @@ carray = np.array([1,0])
 print array.any()
 print barray.any()
 print carray.any()
+
+a = np.array([1,4])
+b = np.array([0,1,2])
+
+print a + b
