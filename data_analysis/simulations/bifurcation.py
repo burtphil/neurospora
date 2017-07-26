@@ -206,7 +206,7 @@ def clock(state, t, rate):
         ###  ODEs Hong et al 2008
         ### letzter summand unklar bei dtfrqmrna
         
-        dt_frq_mrna     = (rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna + rate['k01']) 
+        dt_frq_mrna     = (rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) + rate['k01'] 
         dt_frq_c        = rate['k2'] * frq_mrna - ((rate['k3'] + rate['k5']) * frq_c)
         dt_frq_n        = (rate['k3'] * frq_c) + (rate['k14'] * frq_n_wc1_n) - (frq_n * (rate['k6'] + (rate['k13'] * wc1_n)))
         dt_wc1_mrna     = rate['k7'] - (rate['k10'] * wc1_mrna)
