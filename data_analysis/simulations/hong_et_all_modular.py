@@ -325,8 +325,12 @@ var_dict_plus = rate.copy()
 var_dict_minus = rate.copy()
 amplitudes_pos = rate.copy()
 amplitudes_neg = rate.copy()
-periods = rate.copy()
-phases = rate.copy()
+periods_pos = rate.copy()
+periods_neg = rate.copy()
+phases_pos = rate.copy()
+phases_neg = rate.copy()
+
+
 ### run a simulation varying each parameter of the model susequently by +- 10 percent
 ### initiate a reference state from the simulation with original parameters
 
@@ -363,6 +367,10 @@ for key in rate:
     
     amplitudes_pos[key]=amp_dict_plus
     amplitudes_neg[key]=amp_dict_minus
+    periods_pos[key]=phase_dict_plus
+    periods_neg[key]=phase_dict_minus
+    phases_pos[key]=per_dict_plus
+    phases_neg[key]=per_dict_minus    
     #### combine amp phase and per into dictionary
     ### dict contains parameter as key and a dict with amp per and phase key value pairs
     var_dict_plus[key] = dict(amp_dict_plus.items() + per_dict_plus.items() + phase_dict_plus.items())
@@ -371,6 +379,10 @@ for key in rate:
 ### convert dictionaries of parameter changes into pandas dfs
 amplitudes_pos_df = pd.DataFrame.from_dict(amplitudes_pos, orient = "index")   
 amplitudes_neg_df = pd.DataFrame.from_dict(amplitudes_neg, orient = "index")
+periods_pos_df = pd.DataFrame.from_dict(periods_pos, orient = "index")   
+periods_neg_df = pd.DataFrame.from_dict(periods_neg, orient = "index")
+phases_pos_df = pd.DataFrame.from_dict(phases_pos, orient = "index")   
+phases_neg_df = pd.DataFrame.from_dict(phases_neg, orient = "index")
 
 
 
@@ -457,6 +469,26 @@ plt.show()
 
 amplitudes_neg_df.plot.bar()
 plt.ylabel("Relative amplitude change [%]")
+plt.title("Parameter change minus 10 %")
+plt.show()
+
+periods_pos_df.plot.bar()
+plt.ylabel("Relative period change [%]")
+plt.title("Parameter change plus 10 %")
+plt.show()
+
+periods_neg_df.plot.bar()
+plt.ylabel("Relative period change [%]")
+plt.title("Parameter change minus 10 %")
+plt.show()
+
+phases_pos_df.plot.bar()
+plt.ylabel("Change in phase relative to frq mrna [%]")
+plt.title("Parameter change plus 10 %")
+plt.show()
+
+phases_neg_df.plot.bar()
+plt.ylabel("Change in phase relative to frq mrna [%]")
 plt.title("Parameter change minus 10 %")
 plt.show()
 
