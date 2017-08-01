@@ -323,7 +323,10 @@ state_names = ["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"
 
 var_dict_plus = rate.copy()
 var_dict_minus = rate.copy()
-
+amplitudes_pos = rate.copy()
+amplitudes_neg = rate.copy()
+periods = rate.copy()
+phases = rate.copy()
 ### run a simulation varying each parameter of the model susequently by +- 10 percent
 ### initiate a reference state from the simulation with original parameters
 
@@ -357,12 +360,20 @@ for key in rate:
     per_dict_minus = make_period_dict(state_minus, ref_state)
     phase_dict_minus = make_phase_dict(state_minus, ref_state)
     
+    
+    amplitudes_pos[key]=amp_dict_plus
+    amplitudes_neg[key]=amp_dict_minus
     #### combine amp phase and per into dictionary
     ### dict contains parameter as key and a dict with amp per and phase key value pairs
     var_dict_plus[key] = dict(amp_dict_plus.items() + per_dict_plus.items() + phase_dict_plus.items())
     var_dict_minus[key] = dict(amp_dict_minus.items() + per_dict_minus.items() + phase_dict_minus.items())
 
-### convert dictionaries of parameter changes into pandas dfs   
+### convert dictionaries of parameter changes into pandas dfs
+amplitudes_pos_df = pd.DataFrame.from_dict(amplitudes_pos, orient = "index")   
+amplitudes_neg_df = pd.DataFrame.from_dict(amplitudes_neg, orient = "index")
+
+
+
 var_plus_df = pd.DataFrame.from_dict(var_dict_plus, orient='index')
 var_minus_df = pd.DataFrame.from_dict(var_dict_minus, orient='index')
 
@@ -383,7 +394,7 @@ var_minus_df.columns = var_minus_df_names
 
 ### combine data frames
 var_df = pd.concat([var_plus_df,var_minus_df], axis = 1)
-
+"""
 # Create a Pandas Excel writer using XlsxWriter as the engine.
 writer = pd.ExcelWriter('hong_robustness.xlsx', engine='xlsxwriter')
 
@@ -430,12 +441,27 @@ worksheet.conditional_format('B2:AQ18', {'type':     'cell',
 
     
 workbook.close()
- 
+ """
 ##############################################################################
 ##############################################################################
 ##############################################################################
+
+### plot bar charts
+
+
+
+amplitudes_pos_df.plot.bar()
+plt.ylabel("Relative amplitude change [%]")
+plt.title("Parameter change plus 10 %")
+plt.show()
+
+amplitudes_neg_df.plot.bar()
+plt.ylabel("Relative amplitude change [%]")
+plt.title("Parameter change minus 10 %")
+plt.show()
+
 ### plot the basic simulation
-   
+plt.figure()
 plt.plot(t,state)
 plt.xlabel("time [h]")
 plt.ylabel("a.u")
@@ -443,9 +469,8 @@ plt.xticks(np.arange(0, 49, 12.0))
 plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
 plt.show()
 
-
 ###
-plt.figure(figsize=(8,12))
+model_subplots = plt.figure(figsize=(8,12))
 plt.subplot(4,2,1)
 plt.plot(t, state[:,0])
 plt.xlabel("time [h]")
@@ -495,4 +520,5 @@ plt.ylabel("a.u")
 plt.xticks(np.arange(0, 49, 12.0))
 plt.title('FRQn:WC-1n')
 plt.tight_layout()
-plt.show()
+
+model_subplots.show()
