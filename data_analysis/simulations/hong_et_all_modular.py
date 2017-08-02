@@ -367,10 +367,10 @@ for key in rate:
     
     amplitudes_pos[key]=amp_dict_plus
     amplitudes_neg[key]=amp_dict_minus
-    periods_pos[key]=phase_dict_plus
-    periods_neg[key]=phase_dict_minus
-    phases_pos[key]=per_dict_plus
-    phases_neg[key]=per_dict_minus    
+    periods_pos[key]=per_dict_plus
+    periods_neg[key]=per_dict_minus
+    phases_pos[key]=phase_dict_plus
+    phases_neg[key]=phase_dict_minus    
     #### combine amp phase and per into dictionary
     ### dict contains parameter as key and a dict with amp per and phase key value pairs
     var_dict_plus[key] = dict(amp_dict_plus.items() + per_dict_plus.items() + phase_dict_plus.items())
