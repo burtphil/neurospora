@@ -275,11 +275,6 @@ wc1_tot_min_array = np.empty_like(bif_array)
 
 period_frq_tot_array = np.empty_like(bif_array)
 
-### dummy arrays for reverse bifurcation analysis
-max_array_flip = np.empty_like(bif_array)
-min_array_flip = np.empty_like(bif_array)
-flip_bif_array = np.flip(bif_array,0)
-
 params = rate.copy()
 
 for idx, valx in enumerate(bif_array):
@@ -301,18 +296,6 @@ for idx, valx in enumerate(bif_array):
         period_frq_tot_array[idx] = get_period(frq_tot)
     else: period_frq_tot_array[idx] = np.nan
     
-###
-#check if bifurcation behaves differently if I iterate reverse over the parameter
-"""
-for idx, valx in enumerate(flip_bif_array):
-    params['k7'] = valx
-    state = odeint(clock,state0,t,args=(params,))
-    state_notrans = remove_trans(state)
-    current_state = state_notrans[:,1] + state_notrans[:,2]
-    max_array_flip[idx] = get_maxima(current_state)
-    min_array_flip[idx] = get_minima(current_state)
-"""
-
 
 ##############################################################################
 ##############################################################################

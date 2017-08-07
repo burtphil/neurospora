@@ -270,11 +270,6 @@ frq_tot_min_array = np.empty_like(bif_array)
 
 period_frq_tot_array = np.empty_like(bif_array)
 
-### dummy arrays for reverse bifurcation analysis
-max_array_flip = np.empty_like(bif_array)
-min_array_flip = np.empty_like(bif_array)
-flip_bif_array = np.flip(bif_array,0)
-
 params = rate.copy()
 
 for idx, valx in enumerate(bif_array):
@@ -292,16 +287,6 @@ for idx, valx in enumerate(bif_array):
         period_frq_tot_array[idx] = get_period(frq_tot)
     else: period_frq_tot_array[idx] = np.nan
     
-###
-#check if bifurcation behaves differently if I iterate reverse over the parameter
-for idx, valx in enumerate(flip_bif_array):
-    params['k4'] = valx
-    state = odeint(clock,state0,t,args=(params,))
-    state_notrans = remove_trans(state)
-    current_state = state_notrans[:,1] + state_notrans[:,2]
-    max_array_flip[idx] = get_maxima(current_state)
-    min_array_flip[idx] = get_minima(current_state)
-
 
 ##############################################################################
 ##############################################################################
@@ -310,17 +295,12 @@ for idx, valx in enumerate(flip_bif_array):
 
 plt.figure(figsize=(8,12))
 
-plt.subplot(221)
+plt.subplot(121)
 plt.plot(bif_array, frq_tot_max_array, 'k', bif_array, frq_tot_min_array, 'k')
 plt.xlabel("rate of frq mrna degradation, k4")
 plt.ylabel("$[FRQ]_{tot}$, a.u.")
 
-plt.subplot(222)
-plt.plot(flip_bif_array, max_array_flip, 'k', flip_bif_array, min_array_flip, 'k')
-plt.xlabel("rate of frq mrna degradation, k4")
-plt.ylabel("$[FRQ]_{tot}$, a.u. flipped")
-
-plt.subplot(223)
+plt.subplot(122)
 plt.plot(bif_array, period_frq_tot_array)
 plt.xlabel("rate of frq mrna degradation, k4")
 plt.ylabel("period, h")

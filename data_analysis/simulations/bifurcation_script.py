@@ -180,7 +180,9 @@ def remove_trans(state):
     Remove transients from state variable
     Return state variable without transients
     """
-    return np.array(state[16000:,:])
+    state_len = int(state.shape[0] * 0.8)
+    
+    return np.array(state[state_len:,:])
 
 def clock(state, t, rate):
 
@@ -248,17 +250,29 @@ state0 = [frq_mrna0,
           wc1_n0,
           frq_n_wc1_n0]
 
-### set time to integrate
 
-t      = np.arange(0,4800,0.1)
 
+
+
+##############################################################################
 ##############################################################################
 ##############################################################################
 ### bifurcation analysis
 
 ### initialize parameter array
-bif_array = np.linspace(0.1,1,100)
+lower_border = float(raw_input("input lower border of parameter range: "))
+upper_border = float(raw_input("input upper border of parameter range: "))
+resolution = int(raw_input("input param resolution as whole number: "))
 
+bif_array = np.linspace(lower_border,upper_border,resolution)
+
+
+
+### set time to integrate
+
+integration_time = int(raw_input("input integration time"))
+
+t      = np.arange(0,integration_time,0.1)
 
 #### dummy arrays to be filled after simulation steps
 frq_tot_max_array = np.empty_like(bif_array)
@@ -266,11 +280,12 @@ frq_tot_min_array = np.empty_like(bif_array)
 
 period_frq_tot_array = np.empty_like(bif_array)
 
-
 params = rate.copy()
-param = 'k8'
+
+param = str(raw_input("input parameter for bifurcation: "))
+
 for idx, valx in enumerate(bif_array):
-    params['k8'] = valx
+    params[param] = valx
     state = odeint(clock,state0,t,args=(params,))
     state_notrans = remove_trans(state)
     
@@ -283,15 +298,18 @@ for idx, valx in enumerate(bif_array):
     if (frq_tot_max_array[idx] - frq_tot_min_array[idx] > 5):
         period_frq_tot_array[idx] = get_period(frq_tot)
     else: period_frq_tot_array[idx] = np.nan
-#########################################################################
+
 ##############################################################################
+##############################################################################
+
 ### plot the bifurcation
+
+xlabel = param
 datestring = datetime.strftime(datetime.now(), '%Y-%m-%d')
 save_to = 'C:/Users/Philipp/Desktop/neurospora/figures/bifurcations/frq_tot/'
 
-
 plt.figure(figsize=(20,10))
-xlabel = param
+
 plt.subplot(121)
 plt.plot(bif_array, frq_tot_max_array, 'k', bif_array, frq_tot_min_array, 'k')
 plt.xlabel(xlabel)
@@ -301,7 +319,6 @@ plt.subplot(122)
 plt.plot(bif_array, period_frq_tot_array)
 plt.xlabel(xlabel)
 plt.ylabel("period, h")
-plt.ylim([14,28])
 plt.tight_layout()
 
 plt.savefig(save_to + datestring + "-" + param)

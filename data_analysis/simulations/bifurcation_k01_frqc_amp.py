@@ -180,7 +180,7 @@ def remove_trans(state):
     Remove transients from state variable
     Return state variable without transients
     """
-    return np.array(state[1600:,:])
+    return np.array(state[16000:,:])
 
 def clock(state, t, rate):
 
@@ -250,7 +250,7 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,480,0.1)
+t      = np.arange(0,4800,0.1)
 
 
 
@@ -261,11 +261,10 @@ t      = np.arange(0,480,0.1)
 ### bifurcation analysis
 
 bif_array = np.linspace(0,1,100)
-flip_bif_array = np.flip(bif_array,0)
+
 max_array = np.empty_like(bif_array)
 min_array = np.empty_like(bif_array)
-max_array_flip = np.empty_like(bif_array)
-min_array_flip = np.empty_like(bif_array)
+
 period_array = np.empty_like(bif_array)
 params = rate.copy()
 
@@ -276,54 +275,26 @@ for idx, valx in enumerate(bif_array):
     current_state = state_notrans[:,1]
     max_array[idx] = get_maxima(current_state)
     min_array[idx] = get_minima(current_state)
-    if max_array[idx] - min_array[idx] > 0.5 :
+    if max_array[idx] - min_array[idx] > 1 :
         period_array[idx] = get_period(current_state)
     else: period_array[idx] = np.nan
     
-for idx, valx in enumerate(flip_bif_array):
-    params['k01'] = valx
-    state = odeint(clock,state0,t,args=(params,))
-    state_notrans = remove_trans(state)
-    current_state = state_notrans[:,1]
-    max_array_flip[idx] = get_maxima(current_state)
-    min_array_flip[idx] = get_minima(current_state)
-
-frq_c_bif = np.column_stack((max_array,min_array))
-frq_c_bif_flip = np.column_stack((max_array_flip,min_array_flip))
 ##############################################################################
 ##############################################################################
 state = odeint(clock,state0,t,args=(rate,))
 ### plot the bifurcation
 
-plt.figure(figsize=(8,12))
-plt.subplot(2,2,1)
-plt.plot(bif_array, frq_c_bif)
-plt.ylim([10,40])
-plt.xlabel("k01")
-plt.ylabel("FRQc")
-plt.title('FRQc ')
+plt.subplot(121)
+plt.plot(bif_array, max_array, 'k', bif_array, min_array, 'k')
+plt.xlabel("rate of k01")
+plt.ylabel("$[FRQ]_{tot}$, a.u.")
 
-plt.subplot(2,2,2)
-plt.plot(flip_bif_array, frq_c_bif_flip)
-plt.ylim([10,40])
-plt.xlabel("k01")
-plt.ylabel("FRQc")
-plt.title('FRQc flip')
-
-plt.subplot(2,2,3)
-plt.plot(t,state)
-plt.xlabel("time [h]")
-plt.ylabel("a.u")
-plt.title('original simulation')
-plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
-
-plt.subplot(2,2,4)
+plt.subplot(122)
 plt.plot(bif_array, period_array)
+plt.xlabel("rate of k01")
+plt.ylabel("period, h")
 plt.ylim([14,28])
-plt.xlabel("k01")
-plt.ylabel("FRQc period")
-plt.title('FRQc period ')
 
-
+plt.tight_layout()
 
 plt.show()

@@ -180,7 +180,7 @@ def remove_trans(state):
     Remove transients from state variable
     Return state variable without transients
     """
-    return np.array(state[16000:,:])
+    return np.array(state[1600:,:])
 
 def clock(state, t, rate):
 
@@ -250,14 +250,18 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,4800,0.1)
+t      = np.arange(0,480,0.1)
 
+
+
+
+##############################################################################
 ##############################################################################
 ##############################################################################
 ### bifurcation analysis
 
 ### initialize parameter array
-bif_array = np.linspace(0.1,1,100)
+bif_array = np.linspace(30,50,100)
 
 
 #### dummy arrays to be filled after simulation steps
@@ -266,11 +270,10 @@ frq_tot_min_array = np.empty_like(bif_array)
 
 period_frq_tot_array = np.empty_like(bif_array)
 
-
 params = rate.copy()
-param = 'k8'
+
 for idx, valx in enumerate(bif_array):
-    params['k8'] = valx
+    params['k9'] = valx
     state = odeint(clock,state0,t,args=(params,))
     state_notrans = remove_trans(state)
     
@@ -283,15 +286,18 @@ for idx, valx in enumerate(bif_array):
     if (frq_tot_max_array[idx] - frq_tot_min_array[idx] > 5):
         period_frq_tot_array[idx] = get_period(frq_tot)
     else: period_frq_tot_array[idx] = np.nan
-#########################################################################
+
 ##############################################################################
+##############################################################################
+
 ### plot the bifurcation
+
+xlabel = "rate of WC-1 import to nucleus, k9"
 datestring = datetime.strftime(datetime.now(), '%Y-%m-%d')
 save_to = 'C:/Users/Philipp/Desktop/neurospora/figures/bifurcations/frq_tot/'
 
+plt.figure(figsize=(8,12))
 
-plt.figure(figsize=(20,10))
-xlabel = param
 plt.subplot(121)
 plt.plot(bif_array, frq_tot_max_array, 'k', bif_array, frq_tot_min_array, 'k')
 plt.xlabel(xlabel)
@@ -304,5 +310,5 @@ plt.ylabel("period, h")
 plt.ylim([14,28])
 plt.tight_layout()
 
-plt.savefig(save_to + datestring + "-" + param)
+plt.savefig(save_to + datestring + "-" + "k9")
 plt.show()

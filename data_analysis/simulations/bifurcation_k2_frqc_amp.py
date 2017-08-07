@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from scipy.signal import argrelextrema
-
+from datetime import datetime
 
 ### define model variable names used in dictionaries
 
@@ -253,15 +253,13 @@ state0 = [frq_mrna0,
 t      = np.arange(0,4800,0.1)
 
 
-
-
 ##############################################################################
 ##############################################################################
 ##############################################################################
 ### bifurcation analysis
 
 ### initialize parameter array
-bif_array = np.linspace(1,5,200)
+bif_array = np.linspace(1.5,5,100)
 
 
 #### dummy arrays to be filled after simulation steps
@@ -270,15 +268,11 @@ frq_tot_min_array = np.empty_like(bif_array)
 
 period_frq_tot_array = np.empty_like(bif_array)
 
-### dummy arrays for reverse bifurcation analysis
-max_array_flip = np.empty_like(bif_array)
-min_array_flip = np.empty_like(bif_array)
-flip_bif_array = np.flip(bif_array,0)
-
 params = rate.copy()
 
+param = 'k2'
 for idx, valx in enumerate(bif_array):
-    params['k2'] = valx
+    params[param] = valx
     state = odeint(clock,state0,t,args=(params,))
     state_notrans = remove_trans(state)
     
@@ -291,51 +285,28 @@ for idx, valx in enumerate(bif_array):
     if (frq_tot_max_array[idx] - frq_tot_min_array[idx] > 5):
         period_frq_tot_array[idx] = get_period(frq_tot)
     else: period_frq_tot_array[idx] = np.nan
-    
-###
-#check if bifurcation behaves differently if I iterate reverse over the parameter
-for idx, valx in enumerate(flip_bif_array):
-    params['k2'] = valx
-    state = odeint(clock,state0,t,args=(params,))
-    state_notrans = remove_trans(state)
-    current_state = state_notrans[:,1] + state_notrans[:,2]
-    max_array_flip[idx] = get_maxima(current_state)
-    min_array_flip[idx] = get_minima(current_state)
-
 
 ##############################################################################
 ##############################################################################
 
 ### plot the bifurcation
+datestring = datetime.strftime(datetime.now(), '%Y-%m-%d')
+save_to = 'C:/Users/Philipp/Desktop/neurospora/figures/bifurcations/frq_tot/'
 
-plt.figure(figsize=(8,12))
 
-plt.subplot(221)
+plt.figure(figsize=(20,10))
+xlabel = param
+plt.subplot(121)
 plt.plot(bif_array, frq_tot_max_array, 'k', bif_array, frq_tot_min_array, 'k')
-plt.xlabel("rate of frq translation, k2")
+plt.xlabel(xlabel)
 plt.ylabel("$[FRQ]_{tot}$, a.u.")
 
-plt.subplot(222)
-plt.plot(flip_bif_array, max_array_flip, 'k', flip_bif_array, min_array_flip, 'k')
-plt.xlabel("rate of frq translation, k2")
-plt.ylabel("$[FRQ]_{tot}$, a.u. flipped")
-
-plt.subplot(223)
+plt.subplot(122)
 plt.plot(bif_array, period_frq_tot_array)
-plt.xlabel("rate of frq translation, k2")
+plt.xlabel(xlabel)
 plt.ylabel("period, h")
+plt.ylim([14,28])
 plt.tight_layout()
 
+plt.savefig(save_to + datestring + "-" + param)
 plt.show()
-
-### plot original simulation
-"""
-state = odeint(clock,state0,t,args=(rate,))
-
-plt.plot(t,state)
-plt.xlabel("time [h]")
-plt.ylabel("a.u")
-plt.xticks(np.arange(0, 49, 12.0))
-plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
-plt.show()
-"""
