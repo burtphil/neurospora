@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from scipy.signal import argrelextrema
-
+from datetime import datetime
 
 ### define model variable names used in dictionaries
 
@@ -180,7 +180,7 @@ def remove_trans(state):
     Remove transients from state variable
     Return state variable without transients
     """
-    return np.array(state[16000:,:])
+    return np.array(state[160000:,:])
 
 def clock(state, t, rate):
 
@@ -250,7 +250,7 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,4800,0.1)
+t      = np.arange(0,48000,0.1)
 
 
 
@@ -290,7 +290,8 @@ for idx, valx in enumerate(bif_array):
 
 ##############################################################################
 ##############################################################################
-
+datestring = datetime.strftime(datetime.now(), '%Y-%m-%d')
+save_to = '/home/burt/neurospora/figures/bifurcations/frq_tot/'
 ### plot the bifurcation
 
 plt.figure(figsize=(8,12))
@@ -307,7 +308,7 @@ plt.ylabel("period, h")
 plt.tight_layout()
 
 plt.show()
-
+plt.savefig(save_to + datestring + "-" + "k4")
 ### plot original simulation
 """
 state = odeint(clock,state0,t,args=(rate,))

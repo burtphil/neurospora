@@ -180,7 +180,7 @@ def remove_trans(state):
     Remove transients from state variable
     Return state variable without transients
     """
-    return np.array(state[16000:,:])
+    return np.array(state[160000:,:])
 
 def clock(state, t, rate):
 
@@ -250,7 +250,7 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,4800,0.1)
+t      = np.arange(0,48000,0.1)
 
 
 
@@ -286,12 +286,12 @@ state = odeint(clock,state0,t,args=(rate,))
 
 plt.subplot(121)
 plt.plot(bif_array, max_array, 'k', bif_array, min_array, 'k')
-plt.xlabel("rate of k01")
+plt.xlabel("rate of frq mRNA overexpression, k01")
 plt.ylabel("$[FRQ]_{tot}$, a.u.")
 
 plt.subplot(122)
 plt.plot(bif_array, period_array)
-plt.xlabel("rate of k01")
+plt.xlabel("rate of frq mRNA overexpression, k01")
 plt.ylabel("period, h")
 plt.ylim([14,28])
 

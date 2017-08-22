@@ -180,7 +180,7 @@ def remove_trans(state):
     Remove transients from state variable
     Return state variable without transients
     """
-    return np.array(state[16000:,:])
+    return np.array(state[160000:,:])
 
 def clock(state, t, rate):
 
@@ -250,7 +250,7 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,4800,0.1)
+t      = np.arange(0,48000,0.1)
 
 
 ##############################################################################
@@ -290,11 +290,11 @@ for idx, valx in enumerate(bif_array):
 ##############################################################################
 ### plot the bifurcation
 datestring = datetime.strftime(datetime.now(), '%Y-%m-%d')
-save_to = 'C:/Users/Philipp/Desktop/neurospora/figures/bifurcations/frq_tot/'
+save_to = 'home/burt/neurospora/figures/bifurcations/frq_tot/'
 
 
 plt.figure(figsize=(20,10))
-xlabel = param
+xlabel = "Dissociation rate of WC-1n binding to frq-promoter, " + param
 plt.subplot(121)
 plt.plot(bif_array, frq_tot_max_array, 'k', bif_array, frq_tot_min_array, 'k')
 plt.xlabel(xlabel)
