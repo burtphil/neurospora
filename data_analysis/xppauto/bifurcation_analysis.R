@@ -4,7 +4,6 @@ setwd("C:\\Users\\Philipp\\Desktop\\neurospora\\data_analysis\\xppauto")
 require(tidyverse)
 require(ggthemes)
 
-
 require(stringr)
 # define header for columns
 var.names <- c("par","min","max","type","oscill","useless")
@@ -53,10 +52,46 @@ test <- per.bif[1]
 amp.names <- str_extract(amp.data, ".\\d+|K")
 per.names <- str_extract(per.data, ".\\d+|K")
 
-### define a theme for plotting
 
-theme <- theme(axis.text = element_text(face="bold", size = 20))+
-  theme_few(base_size = 20)
+
+### test plot
+
+df <- amp.bif[[5]] %>% filter(type == 1 | type == 3)
+max <- df %>% filter(extrama == "max")
+min <- df %>% filter(extrama == "min")
+
+
+
+### define a theme for plotting
+size_axis <- element_text(face="bold", size = 30)
+size_ticks <- element_text(face="bold", size = 30, color = "black")
+size_line <- element_line(color = "black", size = 2)
+
+theme_thesis <- theme_few() +
+  theme(axis.title = size_axis,
+        axis.title.y = element_text(margin = margin(0, 0.8, 0, 0, "cm")),
+        axis.title.x = element_text(margin = margin(0.5, 0, 0, 0, "cm")),
+        axis.text = size_ticks,
+        axis.ticks = size_line,
+        axis.ticks.length=unit(2,"mm"),
+        panel.border = element_rect(size = 2, color = "black")
+       )
+
+### test plot
+
+bifurcation <- ggplot()
+
+bif.plot <- bifurcation + 
+  geom_line(data=max, aes(par,val), color = "black", size = 1)+
+  labs(x=amp.names[5], y ="FRQ [a.u.]")+
+  geom_line(data=min, aes(par,val), color = "black", size = 1)+
+  theme_thesis
+
+bif.plot
+
+
+
+### plot and save amplitude bifurcation diagrams
 
 for (i in seq_along(amp.names)){
   
@@ -66,18 +101,22 @@ for (i in seq_along(amp.names)){
   
   
   bifurcation <- ggplot()
-  
+### I can change this by adding a line with user input for the x axis  
   bif.plot <- bifurcation + 
     geom_line(data=max, aes(par,val), color = "black", size = 1)+
     labs(x=amp.names[i], y ="FRQ [a.u.]")+
     geom_line(data=min, aes(par,val), color = "black", size = 1)+
-    theme
+    theme_thesis
   
   bif.plot
   
   ggsave(paste(amp.names[i],"amp","png", sep = "."), dpi = 1200)
 }
 
+
+
+
+### plot and save period bifurcation diagrams
 
 for (i in seq_along(per.names)){
   
@@ -92,13 +131,13 @@ for (i in seq_along(per.names)){
     bif.plot <- bifurcation + 
       geom_line(data=per, aes(par,period), color = "black", size = 1)+
       labs(x=per.names[i], y ="Period [h]")+
-      theme 
+      theme_thesis
   } else {
     bif.plot <- bifurcation + 
       geom_line(data=per, aes(par,period), color = "black", size = 1)+
       coord_cartesian(ylim = c(borders - 12, borders + 12))+
       labs(x=per.names[i], y ="Period [h]")+
-      theme
+      theme_thesis
   }
   
   bif.plot
