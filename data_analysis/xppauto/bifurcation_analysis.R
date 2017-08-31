@@ -1,4 +1,4 @@
-setwd("C:\\Users\\Philipp\\Desktop\\neurospora\\data_analysis\\xppauto")
+setwd("/home/burt/neurospora/data_analysis/xppauto")
 
 ### load packages
 require(tidyverse)
@@ -110,7 +110,7 @@ for (i in seq_along(amp.names)){
   
   bif.plot
   
-  ggsave(paste(amp.names[i],"amp","png", sep = "."), dpi = 1200)
+  ggsave(paste(amp.names[i],"amp","pdf", sep = "."), dpi = 1200)
 }
 
 
@@ -142,5 +142,5 @@ for (i in seq_along(per.names)){
   
   bif.plot
   
-  ggsave(paste(per.names[i],"per","png", sep = "."), dpi = 1200)
+  ggsave(paste(per.names[i],"per","pdf", sep = "."), dpi = 1200)
 }
