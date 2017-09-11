@@ -19,7 +19,7 @@ from scipy.signal import argrelextrema
 ### dictionary of parameters
 
 ### rate constants per hour
-rate_constants = {
+rate = {
     'k1'    : 1.8,
     'k2'    : 1.8,
     'k3'    : 0.05,
@@ -34,21 +34,14 @@ rate_constants = {
     'k12'   : 0.02,
     'k13'   : 50.0,
     'k14'   : 1.0,
-    'k15'   : 8.0
+    'k15'   : 8.0,
+    'K'     : 1.25,
+    'K2'    : 1.0
 }
 
-dissociation_constants = {
-    'K' : 1.25,
-    'K2': 1.0
-}
-
-params = {
-    'rate_constants'            : rate_constants,
-    'dissociation_constants'    : dissociation_constants
-}
 ### define ODE clock function
 
-def clock(state, t, params):
+def clock(state, t, rate):
         ### purpose:simulate Hong et al 2008 model for neuropora clock
 
 
@@ -62,17 +55,15 @@ def clock(state, t, params):
         wc1_n       = state[5]
         frq_n_wc1_n = state[6]
         
-        rate = params['rate_constants']
-        dis_const = params['dissociation_constants']
         
         ###  ODEs Hong et al 2008
         ### letzter summand unklar bei dtfrqmrna
         
-        dt_frq_mrna     = (rate['k1'] * (wc1_n**2) / (dis_const['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
+        dt_frq_mrna     = (rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
         dt_frq_c        = rate['k2'] * frq_mrna - ((rate['k3'] + rate['k5']) * frq_c)
         dt_frq_n        = (rate['k3'] * frq_c) + (rate['k14'] * frq_n_wc1_n) - (frq_n * (rate['k6'] + (rate['k13'] * wc1_n)))
         dt_wc1_mrna     = rate['k7'] - (rate['k10'] * wc1_mrna)
-        dt_wc1_c        = (rate['k8'] * frq_c * wc1_mrna / (dis_const['K2'] + frq_c)) - ((rate['k9'] + rate['k11']) * wc1_c)
+        dt_wc1_c        = (rate['k8'] * frq_c * wc1_mrna / (rate['K2'] + frq_c)) - ((rate['k9'] + rate['k11']) * wc1_c)
         dt_wc1_n        = (rate['k9'] * wc1_c) - (wc1_n * (rate['k12'] + (rate['k13'] * frq_n))) + (rate['k14'] * frq_n_wc1_n)
         dt_frq_n_wc1_n  = rate['k13'] * frq_n * wc1_n - ((rate['k14'] + rate['k15']) * frq_n_wc1_n)
         
@@ -115,7 +106,7 @@ t      = np.arange(0,480,0.1)
 ### what is a proper time resolution?
 
 ### run simulation
-state = odeint(clock,state0,t,args=(params,))  
+state = odeint(clock,state0,t,args=(rate,))  
 
 ### plot all ODEs
 state_names = ["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"]
