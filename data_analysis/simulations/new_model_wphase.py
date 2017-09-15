@@ -102,11 +102,30 @@ def per(arr):
     per = np.mean(diff)
     
     ### check that distribution of periods is not too wild
-    if np.std(diff) > 0.5 :
-        print "std is higher than 1"
+#    if np.std(diff) > 0.5 :
+#        print "std is higher than 1"
     
     return per
 
+
+def get_phase(a, b):
+    """
+    takes two np arrays (containing maxima)
+    choose first 10 maxima in both arrays
+    subtract and check if entries are positive
+    if not, subtract other way around
+    return phase 2pi normalized over zeitgeber period
+    """
+    a = a[:10]
+    b = b[:10]
+    c = a-b
+    if np.sum(c)>0:
+        c=np.mean(c)
+    else:
+        c=np.mean(b-a)
+    ph = 2*np.pi*c/iper
+    
+    return ph
 ####### implement biological model Hong et al 2008
 
 ### dictionary of parameters
@@ -152,11 +171,11 @@ def clock(state, t, rate):
         ###  ODEs Hong et al 2008
         ### letzter summand unklar bei dtfrqmrna
         
-        dt_frq_mrna     = (rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
+        dt_frq_mrna     = (z(t) * rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
         dt_frq_c        = rate['k2'] * frq_mrna - ((rate['k3'] + rate['k5']) * frq_c)
         dt_frq_n        = (rate['k3'] * frq_c) + (rate['k14'] * frq_n_wc1_n) - (frq_n * (rate['k6'] + (rate['k13'] * wc1_n)))
         dt_wc1_mrna     = rate['k7'] - (rate['k10'] * wc1_mrna)
-        dt_wc1_c        = (z(t) * rate['k8'] * frq_c * wc1_mrna / (rate['K2'] + frq_c)) - ((rate['k9'] + rate['k11']) * wc1_c)
+        dt_wc1_c        = (rate['k8'] * frq_c * wc1_mrna / (rate['K2'] + frq_c)) - ((rate['k9'] + rate['k11']) * wc1_c)
         dt_wc1_n        = (rate['k9'] * wc1_c) - (wc1_n * (rate['k12'] + (rate['k13'] * frq_n))) + (rate['k14'] * frq_n_wc1_n)
         dt_frq_n_wc1_n  = rate['k13'] * frq_n * wc1_n - ((rate['k14'] + rate['k15']) * frq_n_wc1_n)
         
@@ -193,14 +212,14 @@ state0 = [frq_mrna0,
           frq_n_wc1_n0]
 
 ### set time to integrate
-
+"""
 t      = np.arange(0,480,0.1)
 
 ### what is a proper time resolution?
 
 ### run simulation
 state = odeint(clock,state0,t,args=(rate,))  
-
+"""
 ### plot all ODEs
 state_names = ["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"]
 """
@@ -212,8 +231,8 @@ plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
 plt.show()
 """
 
-zeitgeber = np.linspace(0,0.1,100)
-tau = np.linspace(16,28,100)
+zeitgeber = np.linspace(0,0.1,1000)
+tau = np.linspace(16,28,1000)
 zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
 entrain_mesh = np.zeros_like(zeit_mesh)
 
@@ -226,45 +245,87 @@ for idx, valx in enumerate(zeitgeber):
         iper = tau[idy]
         ### define t so that there are enough temp cycles to cut out transients
         ### considering highest tau value
-        t      = np.arange(0,3000,0.1)        
-        state = odeint(clock,state0,t,args=(rate,))
+        t       = np.arange(0,3000,0.1)        
+        state   = odeint(clock,state0,t,args=(rate,))
               
         ### find time after 85 temp cycles (time res. is 0.1)
         ### then get system state x0 after 85 temp cycles
         t_state = int(85 * 10 * tau[idy])                        
-        x0 = state[t_state:,1]
-        tn = t[t_state:]
+        x0      = state[t_state:,1]
+        tn      = t[t_state:]
+        ### do the same for extrinsic zeitgeber function
         
-        ex = get_extrema(x0, tn)
-        max = ex[1]
- 
-        test = []
+        z_state = z(t)
 
+        z0      = z_state[t_state:]
+        
+        ### get extrema and neighbors for zeitgeber function and simulated data
+        ex  = get_extrema(x0, tn)
+        z_ex = get_extrema(z0, tn)
+        
+        ### choose only maxima (get extrema returns minima and maxima)
+        max  = ex[1]
+        z_max = z_ex[1]
+        max_ipol = []
+        z_max_ipol = []
+        
+        ### take every element in max and maxz (a triple ofmaximum and neigbors)
+        ### and interpolate. put result in an empty list
         for x in max:
-            test.append(interpolate(x)[0])
+            max_ipol.append(interpolate(x)[0])
 
-        period = per(test)
+        for x in z_max:
+            z_max_ipol.append(interpolate(x)[0])
         
-        entr = 0
+        max_ipol = np.asarray(max_ipol, dtype = np.float64)
+        z_max_ipol = np.asarray(z_max_ipol, dtype = np.float64)
+        
+        period = per(max_ipol)
+        
+        entr = 2*np.pi
         
         ### define entrainment criteria
         ### T-tau should be < 5 minutes
         ### period std should be small
         c1 = np.abs(tau[idy]-period)*60
-        c2 = np.std(np.diff(test))
+        c2 = np.std(np.diff(max_ipol))
         
-        if c1 < 5 and c2 < 0.5 :
-            entr = 1
-        
+        if c1 < 5 and c2 < 0.5 :           
+            entr = get_phase(max_ipol,z_max_ipol)
+                       
         print idx*idy
         
         entrain_mesh[idy,idx] = entr
 
 
 ent = entrain_mesh[:-1,:-1]
-plt.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = "Blues", edgecolors = "none", vmin = 0, vmax = 1)
+
+fig, ax = plt.subplots()
+heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = "hot", edgecolors = "none", vmin = 0, vmax = 2*np.pi)
+cbar = fig.colorbar(heatmap,ticks=[0,np.pi/2,np.pi,1.5*np.pi,2*np.pi], label = 'Phase [rad]')
+cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
 plt.xlabel("T [h]")
-plt.ylabel("Z [a.u]")
-plt.title(r'$k_8$')
+plt.ylabel("Z [a.u.]")
 plt.show()
         
+"""
+t      = np.arange(0,3000,0.1)
+
+### wha is a proper time resolution?
+zstr = 0.1
+iper = 23
+### run simulation
+state = odeint(clock,state0,t,args=(rate,)) 
+t_state = int(85 * 10 * iper) 
+x0      = state[t_state:,1]
+tn      = t[t_state:]
+
+
+z_state = z(t)
+z0 = z_state[t_state:]*115-90
+
+plt.plot(tn,x0, tn, z0, "r")
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.show()
+"""
