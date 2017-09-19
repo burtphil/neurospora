@@ -231,8 +231,8 @@ plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
 plt.show()
 """
 
-zeitgeber = np.linspace(0,0.1,1000)
-tau = np.linspace(16,28,1000)
+zeitgeber = np.linspace(0,0.1,100)
+tau = np.linspace(16,28,100)
 zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
 entrain_mesh = np.zeros_like(zeit_mesh)
 
@@ -290,8 +290,10 @@ for idx, valx in enumerate(zeitgeber):
         c1 = np.abs(tau[idy]-period)*60
         c2 = np.std(np.diff(max_ipol))
         
-        if c1 < 5 and c2 < 0.5 :           
-            entr = get_phase(max_ipol,z_max_ipol)
+        if c1 < 5 and c2 < 0.5 :
+            if zstr != 0:
+                entr = get_phase(max_ipol,z_max_ipol)
+            else: entr = 0
                        
         print idx*idy
         
