@@ -12,9 +12,10 @@ Created on Thu Jul 26 14:00:15 2017
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
-from scipy.signal import argrelextrema
+import sys
+sys.path.append("C:\\Users\\Philipp\\Desktop\\neurospora\\data_analysis\\simulations")
+import first_class as pb
 from datetime import datetime
-
 ### define model variable names used in dictionaries
 
 state_names = ["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n",
@@ -70,113 +71,6 @@ rate_old = {
     'k01'   : 0,
     'k02'   : 0
 }
-
-#### functions
-##############################################################################
-##############################################################################
-##############################################################################
-def get_extrema(y,t):
-    """
-    take two arrays: y values and corresponding time array
-    finds local maxima and minima
-    finds adjacent values next to local maxima and minima
-    return list with maxima and minima
-    both list entries contain three arrays corresponding to actual extrema, and both neighbors
-    """
-
-    imax = y.size-1
-    i = 1
-    
-    tmax = []
-    tmax_after = []
-    tmax_before = []  
-    ymax = []
-    ymax_after = []
-    ymax_before = []
-    
-    tmin = []
-    tmin_after = []
-    tmin_before = [] 
-    ymin = []
-    ymin_after = []
-    ymin_before = []
-
-    while i < imax:
-        
-        if (y[i] > y[i+1]) & (y[i] > y[i-1]):
-            tmax.append(t[i])
-            tmax_after.append(t[i+1])
-            tmax_before.append(t[i-1])
-            ymax.append(y[i])
-            ymax_after.append(y[i+1])
-            ymax_before.append(y[i-1])
-
-        if (y[i] < y[i+1]) & (y[i] < y[i-1]):
-            tmin.append(t[i])
-            tmin_after.append(t[i+1])
-            tmin_before.append(t[i-1])
-            ymin.append(y[i])
-            ymin_after.append(y[i+1])
-            ymin_before.append(y[i-1])
-        i = i+1
-    
-    maxima = [tmax,tmax_before,tmax_after,ymax,ymax_before,ymax_after]
-    maxima = np.array(maxima).T
-    minima = [tmin,tmin_before,tmin_after,ymin,ymin_before,ymin_after]  
-    minima = np.array(minima).T
-    
-    return([maxima,minima])
-
-def interpolate(m):
-    """
-    takes an array with three x and three corresponding y values as input
-    define parabolic function through three points and 
-    returns local maximum as array([time, y value])     
-    """
-    
-    x1 = m[0]
-    x2 = m[1]
-    x3 = m[2]
-    y1 = m[3]
-    y2 = m[4]
-    y3 = m[5]
-    denom = (x1 - x2)*(x1 - x3)*(x2 - x3)
-    A = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom
-    B = (x3**2 * (y1 - y2) + x2**2 * (y3 - y1) + x1**2 * (y2 - y3)) / denom
-    C = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom
-    xext = -B/(2*A)
-    yext = A*xext**2 + B*xext + C
-    
-    return(np.array([xext,yext]))
-
-def get_max(arr):
-    
-    l= []
-    for x in arr:
-        l.append(interpolate(x)[0])
-    return np.asarray(l)
-
-def get_min(arr):
-    
-    l= []
-    for x in arr:
-        l.append(interpolate(x)[1])
-    return np.asarray(l)
-
-def get_period(arr):
-    """
-    take array containing time stamps of maxima
-    returns the mean of time differences between maxima
-    """
-    diff = np.diff(arr)
-    per = np.mean(diff)
-    
-    ### check that distribution of periods is not too wild
-#    if np.std(diff) > 0.5 :
-#        print "std is higher than 1"
-    
-    return per
-
     
 def remove_trans(state):
     """
@@ -265,14 +159,14 @@ tref = t[:16000]
 ### bifurcation analysis
 
 ### initialize parameter array
-bif_array = np.linspace(0.03,0.27,100)
+bif_array = np.linspace(0,1,100)
 
 
 #### dummy arrays to be filled after simulation steps
-frq_tot_max_array = np.empty_like(bif_array)
-frq_tot_min_array = np.empty_like(bif_array)
+max_array = np.empty_like(bif_array)
+min_array = np.empty_like(bif_array)
 
-period_frq_tot_array = np.empty_like(bif_array)
+period_array = np.empty_like(bif_array)
 
 params = rate.copy()
 
@@ -282,30 +176,14 @@ for idx, valx in enumerate(bif_array):
     state_notrans = remove_trans(state)
     
     ### store maxima and minima after each simulation step
-    frq_tot = state_notrans[:,1]
-    ex = get_extrema(frq_tot,tref)
-    
-    ymax = ex[1]
-    ymin = ex[0]
-    ymax_ipol = []
-    ymin_ipol = []
-    xmax_ipol = 
-    for x in ymax:
-        ymax_ipol.append(interpolate(x)[1])
-    
-    for y in ymin:
-        ymin_ipol.append(interpolate(x)[1])
-  
-    ymax_ipol = np.asarray(ymax_ipol, dtype = np.float64)
-    ymin_ipol = np.asarray(ymin_ipol, dtype = np.float64)
-    
-    frq_tot_max_array[idx] = np.mean(ymax_ipol)
-    frq_tot_min_array[idx] = np.mean(ymin_ipol)
+    frq_tot = state_notrans[:16000,1]
+    max_array[idx] = np.mean(pb.get_max(frq_tot, tref))
+    min_array[idx] = np.mean(pb.get_min(frq_tot, tref))
     
     ### criterion for the period to be defined
-    if (frq_tot_max_array[idx] - frq_tot_min_array[idx] > 5):
-        period_frq_tot_array[idx] = get_period(frq_tot)
-    else: period_frq_tot_array[idx] = np.nan
+    if (max_array[idx] - min_array[idx] > 5):
+        period_array[idx] = np.mean(pb.get_periods(frq_tot, tref))
+    else: period_array[idx] = np.nan
 
 ##############################################################################
 ##############################################################################
@@ -316,15 +194,15 @@ xlabel = "rate of FRQ import to nucleus, k3"
 datestring = datetime.strftime(datetime.now(), '%Y-%m-%d')
 save_to = 'C:/Users/Philipp/Desktop/neurospora/figures/bifurcations/frq_tot/'
 
-plt.figure(figsize=(20,10))
+plt.figure(figsize=(12,8))
 
 plt.subplot(121)
-plt.plot(bif_array, frq_tot_max_array, 'k', bif_array, frq_tot_min_array, 'k')
+plt.plot(bif_array, max_array, 'k', bif_array, min_array, 'k')
 plt.xlabel(xlabel)
 plt.ylabel("$[FRQ]_{tot}$, a.u.")
 
 plt.subplot(122)
-plt.plot(bif_array, period_frq_tot_array)
+plt.plot(bif_array, period_array)
 plt.xlabel(xlabel)
 plt.ylabel("period, h")
 plt.ylim([14,28])

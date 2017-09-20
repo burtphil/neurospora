@@ -92,6 +92,16 @@ def get_min(a,t):
     out = ipol(ex,1)
     return out
 
+def get_xmax(a,t):
+    ex = get_extrema(a,t)[0]
+    out = ipol(ex,0)
+    return out
+
+def get_xmin(a,t):
+    ex = get_extrema(a,t)[1]
+    out = ipol(ex,0)
+    return out
+
 def ipol(arr,nr):
     l=[]
     for x in arr:
@@ -110,3 +120,27 @@ def get_periods(a,t):
     diff = np.diff(l)
     
     return diff
+
+
+def get_phase(a,ta, b, tb):
+    """
+    takes two np arrays (containing maxima)
+    choose first 10 maxima in both arrays
+    subtract and check if entries are positive
+    if not, subtract other way around
+    return phase 2pi normalized over zeitgeber period
+    """
+    a = get_xmin(a,ta)
+    b = get_xmin(b,tb)
+    a = a[:10]
+    b = b[:10]
+    c = a-b
+    if np.sum(c)>0:
+        c=np.mean(c)
+    else:
+        c=np.mean(b-a)
+    
+    return c
+
+
+### test functions

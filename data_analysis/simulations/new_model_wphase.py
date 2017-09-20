@@ -8,7 +8,9 @@ Created on Mon Sep 11 11:46:21 2017
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
-
+import sys
+sys.path.append("C:\\Users\\Philipp\\Desktop\\neurospora\\data_analysis\\simulations")
+import first_class as pb
 ### global variables
 ### dummy variables for z(t) fct
 zstr = 0
@@ -19,113 +21,6 @@ def z(t):
     out = 1 + zstr*np.cos(2*np.pi*t/iper)
     return out
 
-def get_extrema(y,t):
-    """
-    take two arrays: y values and corresponding time array
-    finds local maxima and minima
-    finds adjacent values next to local maxima and minima
-    return list with maxima and minima
-    both list entries contain three arrays corresponding to actual extrema, and both neighbors
-    """
-
-    imax = y.size-1
-    i = 1
-    
-    tmax = []
-    tmax_after = []
-    tmax_before = []  
-    ymax = []
-    ymax_after = []
-    ymax_before = []
-    
-    tmin = []
-    tmin_after = []
-    tmin_before = [] 
-    ymin = []
-    ymin_after = []
-    ymin_before = []
-
-    while i < imax:
-        
-        if (y[i] > y[i+1]) & (y[i] > y[i-1]):
-            tmax.append(t[i])
-            tmax_after.append(t[i+1])
-            tmax_before.append(t[i-1])
-            ymax.append(y[i])
-            ymax_after.append(y[i+1])
-            ymax_before.append(y[i-1])
-
-        if (y[i] < y[i+1]) & (y[i] < y[i-1]):
-            tmin.append(t[i])
-            tmin_after.append(t[i+1])
-            tmin_before.append(t[i-1])
-            ymin.append(y[i])
-            ymin_after.append(y[i+1])
-            ymin_before.append(y[i-1])
-        i = i+1
-    
-    maxima = [tmax,tmax_before,tmax_after,ymax,ymax_before,ymax_after]
-    maxima = np.array(maxima).T
-    minima = [tmin,tmin_before,tmin_after,ymin,ymin_before,ymin_after]  
-    minima = np.array(minima).T
-    
-    return([maxima,minima])
-
-def interpolate(m):
-    """
-    takes an array with three x and three corresponding y values as input
-    define parabolic function through three points and 
-    returns local maximum as array([time, y value])     
-    """
-    
-    x1 = m[0]
-    x2 = m[1]
-    x3 = m[2]
-    y1 = m[3]
-    y2 = m[4]
-    y3 = m[5]
-    denom = (x1 - x2)*(x1 - x3)*(x2 - x3)
-    A = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom
-    B = (x3**2 * (y1 - y2) + x2**2 * (y3 - y1) + x1**2 * (y2 - y3)) / denom
-    C = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom
-    xext = -B/(2*A)
-    yext = A*xext**2 + B*xext + C
-    
-    return(np.array([xext,yext]))
-
-def per(arr):
-    """
-    take array containing time stamps of maxima
-    returns the mean of time differences between maxima
-    """
-    diff = np.diff(arr)
-    per = np.mean(diff)
-    
-    ### check that distribution of periods is not too wild
-#    if np.std(diff) > 0.5 :
-#        print "std is higher than 1"
-    
-    return per
-
-
-def get_phase(a, b):
-    """
-    takes two np arrays (containing maxima)
-    choose first 10 maxima in both arrays
-    subtract and check if entries are positive
-    if not, subtract other way around
-    return phase 2pi normalized over zeitgeber period
-    """
-    a = a[:10]
-    b = b[:10]
-    c = a-b
-    if np.sum(c)>0:
-        c=np.mean(c)
-    else:
-        c=np.mean(b-a)
-    ph = 2*np.pi*c/iper
-    
-    return ph
 ####### implement biological model Hong et al 2008
 
 ### dictionary of parameters
@@ -231,8 +126,8 @@ plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
 plt.show()
 """
 
-zeitgeber = np.linspace(0,0.1,100)
-tau = np.linspace(16,28,100)
+zeitgeber = np.linspace(0,0.1,10)
+tau = np.linspace(16,28,10)
 zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
 entrain_mesh = np.zeros_like(zeit_mesh)
 
@@ -256,43 +151,25 @@ for idx, valx in enumerate(zeitgeber):
         ### do the same for extrinsic zeitgeber function
         
         z_state = z(t)
-
         z0      = z_state[t_state:]
         
         ### get extrema and neighbors for zeitgeber function and simulated data
-        ex  = get_extrema(x0, tn)
-        z_ex = get_extrema(z0, tn)
-        
-        ### choose only maxima (get extrema returns minima and maxima)
-        max  = ex[1]
-        z_max = z_ex[1]
-        max_ipol = []
-        z_max_ipol = []
-        
-        ### take every element in max and maxz (a triple ofmaximum and neigbors)
-        ### and interpolate. put result in an empty list
-        for x in max:
-            max_ipol.append(interpolate(x)[0])
-
-        for x in z_max:
-            z_max_ipol.append(interpolate(x)[0])
-        
-        max_ipol = np.asarray(max_ipol, dtype = np.float64)
-        z_max_ipol = np.asarray(z_max_ipol, dtype = np.float64)
-        
-        period = per(max_ipol)
-        
+        frq_per  = pb.get_periods(x0, tn)       
+        period = np.mean(frq_per)        
         entr = 2*np.pi
         
         ### define entrainment criteria
         ### T-tau should be < 5 minutes
         ### period std should be small
         c1 = np.abs(tau[idy]-period)*60
-        c2 = np.std(np.diff(max_ipol))
+        c2 = np.std(np.diff(frq_per))
         
         if c1 < 5 and c2 < 0.5 :
             if zstr != 0:
-                entr = get_phase(max_ipol,z_max_ipol)
+                ph = pb.get_phase(x0,tn,z0,tn)
+                ### normalize phase to 2pi and set entr to that phase
+                entr = 2*np.pi*ph/iper
+                
             else: entr = 0
                        
         print idx*idy
@@ -313,7 +190,7 @@ plt.show()
 """
 t      = np.arange(0,3000,0.1)
 
-### wha is a proper time resolution?
+### wha is a proper time resolution?i
 zstr = 0.1
 iper = 23
 ### run simulation
