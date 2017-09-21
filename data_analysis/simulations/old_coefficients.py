@@ -12,6 +12,7 @@ Created on Thu Jul 20 14:00:15 2017
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import math
 from scipy.integrate import odeint
 from scipy.signal import argrelextrema
@@ -457,21 +458,30 @@ workbook.close()
 ##############################################################################
 ##############################################################################
 ##############################################################################
+blue = 	(0,0.41961,0.64314)
+grey = (0.031373,0.349,0.349)
+blue = colors.to_rgb(blue)
+colors.is_color_like(blue)
+
 pnames = ["k1","k2","k3","k4","k5","k6",
           "k7","k8","k9","k10","k11",
           "k12","k13","k14","k15","K","K2"]
+
+####### amplitudes
+
 ### plot bar charts
 test = amplitudes_pos_df["amplitude FRQc"]
 test = test[pnames]
 
 #fig, ax = plt.subplots(figsize = (12,9))
 fig = plt.figure(figsize=(12,4))
-test.plot.bar(color = "black")
+test.plot.bar(color = "black",label=r"$\frac{\Delta\,p_i}{p_i}=+10\,\%$")
 #plt.figure(figsize=(12,9))
 plt.ylabel(r"$C_{p_i}^{A_{FRQ_c}}$", fontsize = 22)
 plt.xticks(rotation=45, fontsize = 16)
 plt.yticks(fontsize = 16)
 plt.tight_layout()
+plt.legend(loc = "lower right", fontsize = 16)
 #plt.axhline(color = "black", linewidth = 0.5)
 plt.show()
 fig.savefig("amp_pos.pdf", dpi = 1200)
@@ -481,23 +491,45 @@ ampneg = ampneg[pnames]
 
 #fig, ax = plt.subplots(figsize = (12,9))
 fig = plt.figure(figsize=(12,4))
-ampneg.plot.bar(color = "black")
+ampneg.plot.bar(color = "black",label=r"$\frac{\Delta\,p_i}{p_i}=-10\,\%$")
 #plt.figure(figsize=(12,9))
-plt.ylabel(r"$C_{p_i}^{A_{FRQ_c}}$", fontsize = 18)
-plt.xticks(rotation=45)
+plt.ylabel(r"$C_{p_i}^{A_{FRQ_c}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(loc = "lower right", fontsize = 16)
+plt.tight_layout()
 #plt.axhline(color = "black", linewidth = 0.5)
 plt.show()
 fig.savefig("amp_neg.pdf", dpi = 1200)
+
+fig = plt.figure(figsize=(12,4))
+test.plot.bar(color = 'tab:blue', edgecolor = "black", label=r"$\frac{\Delta\,p_i}{p_i}=+10\,\%$")
+ampneg.plot.bar(color = 'tab:orange', edgecolor = "black", label = r"$\frac{\Delta\,p_i}{p_i}=-10\,\%$")
+
+#plt.figure(figsize=(12,9))
+plt.ylabel(r"$C_{p_i}^{A_{FRQ_c}}$", fontsize = 22)
+plt.legend(loc = "lower right", fontsize = 15)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.tight_layout()
+#plt.axhline(color = "black", linewidth = 0.5)
+plt.show()
+fig.savefig("amp.pdf", dpi = 1200)
+
+##### phase
 
 ph_pos = phases_pos_df["phase FRQc"]
 ph_pos = ph_pos[pnames]
 
 #fig, ax = plt.subplots(figsize = (12,9))
 fig = plt.figure(figsize=(12,4))
-ph_pos.plot.bar(color = "black")
+ph_pos.plot.bar(color = "black",label=r"$\frac{\Delta\,p_i}{p_i}=+10\,\%$")
 #plt.figure(figsize=(12,9))
-plt.ylabel(r"$C_{p_i}^{\phi_{FRQ_c}}$", fontsize = 18)
-plt.xticks(rotation=45)
+plt.ylabel(r"$C_{p_i}^{\phi_{FRQ_c}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(loc = "lower right", fontsize = 16)
+plt.tight_layout()
 #plt.axhline(color = "black", linewidth = 0.5)
 plt.show()
 fig.savefig("phase_pos.pdf", dpi = 1200)
@@ -507,23 +539,46 @@ ph_neg = ph_neg[pnames]
 
 #fig, ax = plt.subplots(figsize = (12,9))
 fig = plt.figure(figsize=(12,4))
-ph_neg.plot.bar(color = "black")
+ph_neg.plot.bar(color = "black",label=r"$\frac{\Delta\,p_i}{p_i}=-10\,\%$")
 #plt.figure(figsize=(12,9))
-plt.ylabel(r"$C_{p_i}^{\phi_{FRQ_c}}$", fontsize = 18)
-plt.xticks(rotation=45)
+plt.ylabel(r"$C_{p_i}^{\phi_{FRQ_c}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(loc = "lower right", fontsize = 16)
+plt.tight_layout()
 #plt.axhline(color = "black", linewidth = 0.5)
 plt.show()
 fig.savefig("phase_neg.pdf", dpi = 1200)
+
+
+fig = plt.figure(figsize=(12,4))
+ph_pos.plot.bar(color = 'tab:blue',alpha = 0.95, edgecolor = "black", label=r"$\frac{\Delta\,p_i}{p_i}=+10\,\%$")
+ph_neg.plot.bar(color = 'tab:orange', alpha = 0.95 ,edgecolor = "black", label = r"$\frac{\Delta\,p_i}{p_i}=-10\,\%$")
+
+#plt.figure(figsize=(12,9))
+plt.ylabel(r"$C_{p_i}^{\phi_{FRQ_c}}$", fontsize = 22)
+plt.legend(loc = "lower right", fontsize = 15)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(loc = "lower right", fontsize = 16)
+plt.tight_layout()
+#plt.axhline(color = "black", linewidth = 0.5)
+plt.show()
+fig.savefig("phases.pdf", dpi = 1200)
+#### periods
 
 per_neg = periods_neg_df["period FRQc"]
 per_neg = per_neg[pnames]
 
 #fig, ax = plt.subplots(figsize = (12,9))
 fig = plt.figure(figsize=(12,4))
-per_neg.plot.bar(color = "black")
+per_neg.plot.bar(color = "black",label=r"$\frac{\Delta\,p_i}{p_i}=+10\,\%$")
 #plt.figure(figsize=(12,9))
-plt.ylabel(r"$C_{p_i}^{T_{FRQ_c}}$", fontsize = 18)
-plt.xticks(rotation=45)
+plt.ylabel(r"$C_{p_i}^{T_{FRQ_c}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(loc = "lower right", fontsize = 16)
+plt.tight_layout()
 #plt.axhline(color = "black", linewidth = 0.5)
 plt.show()
 fig.savefig("per_neg.pdf", dpi = 1200)
@@ -533,65 +588,144 @@ per_pos = per_pos[pnames]
 
 #fig, ax = plt.subplots(figsize = (12,9))
 fig = plt.figure(figsize=(12,4))
-per_pos.plot.bar(color = "black")
+per_pos.plot.bar(color = "black",label=r"$\frac{\Delta\,p_i}{p_i}=-10\,\%$")
 #plt.figure(figsize=(12,9))
-plt.ylabel(r"$C_{p_i}^{T_{FRQ_c}}$", fontsize = 18)
-plt.xticks(rotation=45)
+plt.ylabel(r"$C_{p_i}^{T_{FRQ_c}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(loc = "lower right", fontsize = 16)
+plt.tight_layout()
 #plt.axhline(color = "black", linewidth = 0.5)
 plt.show()
 fig.savefig("per_pos.pdf", dpi = 1200)
 
+fig = plt.figure(figsize=(12,4))
+per_pos.plot.bar(color = 'tab:blue',alpha = 0.95, edgecolor = "black", label=r"$\frac{\Delta\,p_i}{p_i}=+10\,\%$")
+per_neg.plot.bar(color = 'tab:orange', alpha = 0.95 ,edgecolor = "black", label = r"$\frac{\Delta\,p_i}{p_i}=-10\,\%$")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-amplitudes_pos_df.plot.bar()
-plt.ylabel("Relative amplitude change [%]")
-plt.title("Parameter change plus 10 %")
+#plt.figure(figsize=(12,9))
+plt.ylabel(r"$C_{p_i}^{T_{FRQ_c}}$", fontsize = 22)
+plt.legend(loc = "lower right", fontsize = 16)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.tight_layout()
+#plt.axhline(color = "black", linewidth = 0.5)
 plt.show()
+fig.savefig("periods.pdf", dpi = 1200)
 
-amplitudes_neg_df.plot.bar()
-plt.ylabel("Relative amplitude change [%]")
-plt.title("Parameter change minus 10 %")
+amp_names = [r"$C_{p_i}^{A_{frq\,mRNA}}$",
+             r"$C_{p_i}^{A_{FRQ_c}}$",
+             r"$C_{p_i}^{A_{FRQ_n}}$",
+             r"$C_{p_i}^{A_{wc1\,mRNA}}$",
+             r"$C_{p_i}^{A_{WC1_c}}$",
+             r"$C_{p_i}^{A_{WC1_n}}$",
+             r"$C_{p_i}^{A_{FRQ_n:WC1_n}}$"]
+
+per_names = [r"$C_{p_i}^{T_{frq\,mRNA}}$",
+             r"$C_{p_i}^{T_{FRQ_c}}$",
+             r"$C_{p_i}^{T_{FRQ_n}}$",
+             r"$C_{p_i}^{T_{wc1\,mRNA}}$",
+             r"$C_{p_i}^{T_{WC1_c}}$",
+             r"$C_{p_i}^{T_{WC-1_n}}$",
+             r"$C_{p_i}^{T_{FRQ_n:WC1_n}}$"]
+
+ph_names = [r"$C_{p_i}^{\phi_{frq\,mRNA}}$",
+             r"$C_{p_i}^{\phi_{FRQ_c}}$",
+             r"$C_{p_i}^{\phi_{FRQ_n}}$",
+             r"$C_{p_i}^{\phi_{wc1\,mRNA}}$",
+             r"$C_{p_i}^{\phi_{WC1_c}}$",
+             r"$C_{p_i}^{\phi_{WC1_n}}$",
+             r"$C_{p_i}^{\phi_{FRQ_n:WC1_n}}$"]
+
+acols = amplitudes_pos_df.columns.tolist()
+print acols
+cols = ['amplitude frq mRNA',        
+         'amplitude FRQc',
+         'amplitude FRQn',
+         'amplitude wc-1 mRNA',
+         'amplitude WC-1c',
+         'amplitude WC-1n',
+         'amplitude FRQn:WC-1n']
+
+percols = ['period frq mRNA',        
+         'period FRQc',
+         'period FRQn',
+         'period wc-1 mRNA',
+         'period WC-1c',
+         'period WC-1n',
+         'period FRQn:WC-1n']
+
+phcols = ['phase frq mRNA',        
+         'phase FRQc',
+         'phase FRQn',
+         'phase wc-1 mRNA',
+         'phase WC-1c',
+         'phase WC-1n',
+         'phase FRQn:WC-1n']
+
+amplitudes_pos_df = amplitudes_pos_df[cols]
+amplitudes_neg_df = amplitudes_neg_df[cols]
+periods_pos_df = periods_pos_df[percols]
+periods_neg_df = periods_neg_df[percols]
+phases_pos_df = phases_pos_df[phcols]
+phases_neg_df = phases_neg_df[phcols]
+
+amplitudes_pos_df.plot.bar(figsize=(12,9))
+plt.ylabel(r"$C_{p_i}^{A_{X}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(amp_names, fontsize = 16)
+plt.tight_layout()
 plt.show()
+plt.savefig("amp_all_pos.pdf", dpi = 1200)
 
-periods_pos_df.plot.bar()
-plt.ylabel("Relative period change [%]")
-plt.title("Parameter change plus 10 %")
+amplitudes_neg_df.plot.bar(figsize=(12,9))
+plt.ylabel(r"$C_{p_i}^{A_{X}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(amp_names,loc = 2, fontsize = 16)
+plt.tight_layout()
 plt.show()
+plt.savefig("amp_all_neg.pdf", dpi = 1200)
 
-periods_neg_df.plot.bar()
-plt.ylabel("Relative period change [%]")
-plt.title("Parameter change minus 10 %")
+periods_pos_df.plot.bar(figsize=(12,9))
+plt.ylabel(r"$C_{p_i}^{T_{X}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(per_names, fontsize = 16)
+plt.tight_layout()
 plt.show()
+plt.savefig("per_all_pos.pdf", dpi = 1200)
 
-phases_pos_df.plot.bar()
-plt.ylabel("Change in phase relative to frq mrna [%]")
-plt.title("Parameter change plus 10 %")
+periods_neg_df.plot.bar(figsize=(12,9))
+plt.ylabel(r"$C_{p_i}^{T_{X}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(per_names,loc = 2, fontsize = 16)
+plt.tight_layout()
 plt.show()
+plt.savefig("per_all_neg.pdf", dpi = 1200)
 
-phases_neg_df.plot.bar()
-plt.ylabel("Change in phase relative to frq mrna [%]")
-plt.title("Parameter change minus 10 %")
+phases_pos_df.plot.bar(figsize=(12,9))
+plt.ylabel(r"$C_{p_i}^{\phi_{X}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(ph_names, fontsize = 16)
+plt.tight_layout()
 plt.show()
+plt.savefig("phase_all_pos.pdf", dpi = 1200)
 
+phases_neg_df.plot.bar(figsize=(12,9))
+plt.ylabel(r"$C_{p_i}^{\phi_{X}}$", fontsize = 22)
+plt.xticks(rotation=45, fontsize = 16)
+plt.yticks(fontsize = 16)
+plt.legend(ph_names, fontsize = 16)
+plt.tight_layout()
+plt.show()
+plt.savefig("phase_all_neg.pdf", dpi = 1200)
+
+
+"""
 ### plot the basic simulation
 plt.figure()
 plt.plot(t,state)
@@ -654,3 +788,4 @@ plt.title('FRQn:WC-1n')
 plt.tight_layout()
 
 model_subplots.show()
+"""
