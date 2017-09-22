@@ -259,8 +259,8 @@ plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
 plt.show()
 """
 
-zeitgeber = np.linspace(0,0.1,20)
-tau = np.linspace(10.6,11.6,20)
+zeitgeber = np.linspace(0,0.1,50)
+tau = np.linspace(43,45,50)
 zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
 entrain_mesh = np.zeros_like(zeit_mesh)
 
@@ -273,7 +273,7 @@ for idx, valx in enumerate(zeitgeber):
         iper = tau[idy]
         ### define t so that there are enough temp cycles to cut out transients
         ### considering highest tau value
-        t       = np.arange(0,3000,0.1)        
+        t       = np.arange(0,4000,0.1)        
         state   = odeint(clock,state0,t,args=(rate,))
               
         ### find time after 85 temp cycles (time res. is 0.1)
@@ -294,18 +294,16 @@ for idx, valx in enumerate(zeitgeber):
         ### define entrainment criteria
         ### T-tau should be < 5 minutes
         ### period std should be small
-        c1 = np.abs(tau[idy]-0.5*period)*60
+        c1 = np.abs(tau[idy]-2*period)*60
         c2 = np.std(np.diff(frq_per))
         
-        if c1 < 5 and c2 < 0.5 :
-            if zstr != 0:
-                ph = get_phase(x0,tn,z0,tn)
-                ### normalize phase to 2pi and set entr to that phase
-                entr = 2*np.pi*ph/iper
-                
-            else: entr = 0
+        if c1 < 5:
+            print "entrained!"
+            entr = 0
                        
-        print idx*idy
+        print idx
+        print idy
+        print ""
         
         entrain_mesh[idy,idx] = entr
 

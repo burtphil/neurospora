@@ -258,9 +258,71 @@ plt.xticks(np.arange(0, 49, 12.0))
 plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
 plt.show()
 """
+####################################################### 2:1 tongue
+zeitgeber = np.linspace(0,0.1,100)
+tau = np.linspace(43,45,100)
+zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
+entrain_mesh = np.zeros_like(zeit_mesh)
 
-zeitgeber = np.linspace(0,0.1,20)
-tau = np.linspace(10.6,11.6,20)
+### simulate arnold tongue
+for idx, valx in enumerate(zeitgeber):
+    for idy, valy in enumerate(tau):
+        
+        ### set local variables for z(t) function
+        zstr = zeitgeber[idx]
+        iper = tau[idy]
+        ### define t so that there are enough temp cycles to cut out transients
+        ### considering highest tau value
+        t       = np.arange(0,4000,0.1)        
+        state   = odeint(clock,state0,t,args=(rate,))
+              
+        ### find time after 85 temp cycles (time res. is 0.1)
+        ### then get system state x0 after 85 temp cycles
+        t_state = int(85 * 10 * tau[idy])                        
+        x0      = state[t_state:,1]
+        tn      = t[t_state:]
+        ### do the same for extrinsic zeitgeber function
+        
+        z_state = z(t)
+        z0      = z_state[t_state:]
+        
+        ### get extrema and neighbors for zeitgeber function and simulated data
+        frq_per  = get_periods(x0, tn)       
+        period = np.mean(frq_per)        
+        entr = 2*np.pi
+        
+        ### define entrainment criteria
+        ### T-tau should be < 5 minutes
+        ### period std should be small
+        c1 = np.abs(tau[idy]-2*period)*60
+        c2 = np.std(np.diff(frq_per))
+        
+        if c1 < 5 and c2 < 1:
+            print "entrained!"
+            entr = 0
+                       
+        print idx
+        print idy
+        print ""
+        
+        entrain_mesh[idy,idx] = entr
+
+
+ent = entrain_mesh[:-1,:-1]
+
+#np.savez("k1_tongue_200_res", warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
+
+fig, ax = plt.subplots()
+heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = "hot", edgecolors = "none", vmin = 0, vmax = 2*np.pi)
+cbar = fig.colorbar(heatmap,ticks=[0,np.pi/2,np.pi,1.5*np.pi,2*np.pi], label = 'Phase [rad]')
+cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
+plt.xlabel("T [h]")
+plt.ylabel("Z [a.u.]")
+plt.show()       
+
+####################################################### 1:2 tongue
+zeitgeber = np.linspace(0,0.1,100)
+tau = np.linspace(10.4,11.6,100)
 zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
 entrain_mesh = np.zeros_like(zeit_mesh)
 
@@ -297,15 +359,13 @@ for idx, valx in enumerate(zeitgeber):
         c1 = np.abs(tau[idy]-0.5*period)*60
         c2 = np.std(np.diff(frq_per))
         
-        if c1 < 5 and c2 < 0.5 :
-            if zstr != 0:
-                ph = get_phase(x0,tn,z0,tn)
-                ### normalize phase to 2pi and set entr to that phase
-                entr = 2*np.pi*ph/iper
-                
-            else: entr = 0
+        if c1 < 5 and c2 < 1 :
+            print "entrained!"
+            entr = 0
                        
-        print idx*idy
+        print idx
+        print idy
+        print ""
         
         entrain_mesh[idy,idx] = entr
 
@@ -321,24 +381,3 @@ cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
 plt.xlabel("T [h]")
 plt.ylabel("Z [a.u.]")
 plt.show()       
-"""
-t      = np.arange(0,3000,0.1)
-
-### wha is a proper time resolution?i
-zstr = 0.1
-iper = 23
-### run simulation
-state = odeint(clock,state0,t,args=(rate,)) 
-t_state = int(85 * 10 * iper) 
-x0      = state[t_state:,1]
-tn      = t[t_state:]
-
-
-z_state = z(t)
-z0 = z_state[t_state:]*115-90
-
-plt.plot(tn,x0, tn, z0, "r")
-plt.xlabel("time [h]")
-plt.ylabel("a.u")
-plt.show()
-"""

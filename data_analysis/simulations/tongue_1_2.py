@@ -259,8 +259,8 @@ plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
 plt.show()
 """
 
-zeitgeber = np.linspace(0,0.1,20)
-tau = np.linspace(10.6,11.6,20)
+zeitgeber = np.linspace(0,0.1,50)
+tau = np.linspace(10.6,11.6,50)
 zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
 entrain_mesh = np.zeros_like(zeit_mesh)
 
@@ -298,14 +298,12 @@ for idx, valx in enumerate(zeitgeber):
         c2 = np.std(np.diff(frq_per))
         
         if c1 < 5 and c2 < 0.5 :
-            if zstr != 0:
-                ph = get_phase(x0,tn,z0,tn)
-                ### normalize phase to 2pi and set entr to that phase
-                entr = 2*np.pi*ph/iper
-                
-            else: entr = 0
+            print "entrained!"
+            entr = 0
                        
-        print idx*idy
+        print idx
+        print idy
+        print ""
         
         entrain_mesh[idy,idx] = entr
 
