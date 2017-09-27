@@ -6,6 +6,7 @@ Created on Mon Sep 11 11:46:21 2017
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 
 def get_extrema(y,t):
@@ -146,7 +147,7 @@ def get_phase(a,ta, b, tb):
 ### global variables
 ### dummy variables for z(t) fct
 zstr = 0
-iper = 0
+iper = 22
 
 ### define functions
 def z(t):
@@ -259,50 +260,159 @@ plt.show()
 """
 
 
-tau = np.linspace(65.8,66.8,100)
-ratio = 3.0/1
-### simulate arnold tongue
+def tongue(zeitgeber, T, upper, lower, res):
+    
+    ratio = upper/lower
+    zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,T)
+    entrain_mesh = np.zeros_like(zeit_mesh)
 
-for idy, valy in enumerate(tau):
-        
-        ### set local variables for z(t) function
-    zstr = 0.1
-    iper = tau[idy]
-        ### define t so that there are enough temp cycles to cut out transients
-        ### considering highest tau value
-    t       = np.arange(0,10000,0.1)        
-    state   = odeint(clock,state0,t,args=(rate,))
-              
-        ### find time after 85 temp cycles (time res. is 0.1)
-        ### then get system state x0 after 85 temp cycles
-    t_state = int(85 * 10 * tau[idy])                        
-    x0      = state[t_state:,1]
-    tn      = t[t_state:]
-        ### do the same for extrinsic zeitgeber function
-        
-    z_state = z(t)
-    z0      = z_state[t_state:]
-        
-        ### get extrema and neighbors for zeitgeber function and simulated data
-    frq_per  = get_periods(x0, tn)       
-    period = np.mean(frq_per)        
+    ### simulate arnold tongue
+    for idx, valx in enumerate(zeitgeber):
+        for idy, valy in enumerate(T):
+            
+            ### set local variables for z(t) function
+            global zstr 
+            global iper
+            zstr= zeitgeber[idx]
+            iper = T[idy]
 
-        
-        ### define entrainment criteria
-        ### T-tau should be < 5 minutes
-        ### period std should be small
-    c1 = np.abs(tau[idy]-ratio*period)*60
+            ### define t so that there are enough temp cycles to cut out transients
+            ### considering highest tau value
+            t       = np.arange(0,res,0.1)        
+            state   = odeint(clock,state0,t,args=(rate,))
+                  
+            ### find time after 85 temp cycles (time res. is 0.1)
+            ### then get system state x0 after 85 temp cycles
+            t_state = int(85 * 10 * T[idy])                        
+            x0      = state[t_state:,1]
+            tn      = t[t_state:]
+            ### do the same for extrinsic zeitgeber function
+
+            #z0      = z_state[t_state:]
+            
+            ### get extrema and neighbors for zeitgeber function and simulated data
+            frq_per  = get_periods(x0, tn)       
+            period = np.mean(frq_per)        
+            entr = 2*np.pi
+            
+            ### define entrainment criteria
+            ### T-tau should be < 5 minutes
+            ### period std should be small
+            c = np.abs(T[idy]-ratio*period)*60
+            
+            if c < 5:
+                print "entrained!"
+                entr = 0
+                           
+            print idx
+            print idy
+            print ""
+            
+            entrain_mesh[idy,idx] = entr
+    
+    
+    ent = entrain_mesh[:-1,:-1]
+    
+    t_name = 'tongue_'+str(int(upper))+'_'+str(int(lower))
+    save_to = '/home/burt/neurospora/figures/entrainment/'
+    np.savez(save_to+t_name, warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
+
+    fig, ax = plt.subplots()
+    heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = "hot", edgecolors = "none", vmin = 0, vmax = 2*np.pi)
+    cbar = fig.colorbar(heatmap,ticks=[0,np.pi/2,np.pi,1.5*np.pi,2*np.pi], label = 'Phase [rad]')
+    cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
+    plt.xlabel("T [h]")
+    plt.ylabel("Z [a.u.]")
+    plt.savefig(save_to+t_name+".png", dpi=800)
+    plt.show()
+
+zeitgeber = np.linspace(0,0.1,100)
+
+#### 1/1 tongue
+mi = 18.0
+ma = 26.0
+upper = 1.0
+lower = 1.0
+res = 3000
+T = np.linspace(mi,ma,100)
+
+tongue(zeitgeber, T,upper,lower,res)
+
+#### 1/2 tongue
+mi = 10.4
+ma = 11.6
+upper = 1.0
+lower = 2.0
+res = 3000
+T = np.linspace(mi,ma,100)
+
+tongue(zeitgeber, T,upper,lower,res)
+
+#### 2/1 tongue
+mi = 43.0
+ma = 45.0
+upper = 2.0
+lower = 1.0
+res = 4000
+T = np.linspace(mi,ma,100)
+
+tongue(zeitgeber, T,upper,lower,res)
+#### 1/3 tongue
+mi = 6.8
+ma = 7.8
+upper = 1.0
+lower = 3.0
+res = 3000
+T = np.linspace(mi,ma,100)
+
+tongue(zeitgeber, T,upper,lower,res)
+#### 3/1 tongue
+mi = 65.5
+ma = 66.6
+upper = 3.0
+lower = 1.0
+res = 10000
+T = np.linspace(mi,ma,100)
+
+tongue(zeitgeber, T,upper,lower,res)
+#### 2/3 tongue
+mi = 14.2
+ma = 15.1
+upper = 2.0
+lower = 3.0
+res = 3000
+T = np.linspace(mi,ma,100)
+
+tongue(zeitgeber, T,upper,lower,res)
+#### 3/2 tongue
+mi = 32.7
+ma = 33.6
+upper = 3.0
+lower = 2.0
+res = 4000
+T = np.linspace(mi,ma,100)
+
+tongue(zeitgeber, T,upper,lower,res) 
 
     
-#    c2 = np.std(np.diff(frq_per))
-        
-    if c1 < 5:
-        print "entrained!"
-        
-    print ""
-    print c1
-    print iper
-                       
+"""
+t      = np.arange(0,3000,0.1)
 
-        
+### wha is a proper time resolution?i
+zstr = 0.1
+iper = 23
+### run simulation
+state = odeint(clock,state0,t,args=(rate,)) 
+t_state = int(85 * 10 * iper) 
+x0      = state[t_state:,1]
+tn      = t[t_state:]
 
+
+z_state = z(t)
+z0 = z_state[t_state:]*115-90
+
+plt.plot(tn,x0, tn, z0, "r")
+plt.xlabel("time [h]")
+plt.ylabel("a.u")
+plt.show()
+"""

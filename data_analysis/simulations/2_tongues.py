@@ -261,8 +261,8 @@ plt.show()
 ####################################################### 2:1 tongue
 zeitgeber = np.linspace(0,0.1,100)
 tau = np.linspace(43,45,100)
-zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
-entrain_mesh = np.zeros_like(zeit_mesh)
+zeit_mesh1,warm_mesh1 = np.meshgrid(zeitgeber,tau)
+entrain_mesh = np.zeros_like(zeit_mesh1)
 
 ### simulate arnold tongue
 for idx, valx in enumerate(zeitgeber):
@@ -308,12 +308,12 @@ for idx, valx in enumerate(zeitgeber):
         entrain_mesh[idy,idx] = entr
 
 
-ent = entrain_mesh[:-1,:-1]
+ent1 = entrain_mesh[:-1,:-1]
 
 #np.savez("k1_tongue_200_res", warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
 
 fig, ax = plt.subplots()
-heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = "hot", edgecolors = "none", vmin = 0, vmax = 2*np.pi)
+heatmap = ax.pcolormesh(warm_mesh1,zeit_mesh1, ent1, cmap = "hot", edgecolors = "none", vmin = 0, vmax = 2*np.pi)
 cbar = fig.colorbar(heatmap,ticks=[0,np.pi/2,np.pi,1.5*np.pi,2*np.pi], label = 'Phase [rad]')
 cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
 plt.xlabel("T [h]")
@@ -323,8 +323,8 @@ plt.show()
 ####################################################### 1:2 tongue
 zeitgeber = np.linspace(0,0.1,100)
 tau = np.linspace(10.4,11.6,100)
-zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
-entrain_mesh = np.zeros_like(zeit_mesh)
+zeit_mesh2,warm_mesh2 = np.meshgrid(zeitgeber,tau)
+entrain_mesh = np.zeros_like(zeit_mesh2)
 
 ### simulate arnold tongue
 for idx, valx in enumerate(zeitgeber):
@@ -370,12 +370,12 @@ for idx, valx in enumerate(zeitgeber):
         entrain_mesh[idy,idx] = entr
 
 
-ent = entrain_mesh[:-1,:-1]
+ent2 = entrain_mesh[:-1,:-1]
 
 #np.savez("k1_tongue_200_res", warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
 
 fig, ax = plt.subplots()
-heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = "hot", edgecolors = "none", vmin = 0, vmax = 2*np.pi)
+heatmap = ax.pcolormesh(warm_mesh2,zeit_mesh2, ent2, cmap = "hot", edgecolors = "none", vmin = 0, vmax = 2*np.pi)
 cbar = fig.colorbar(heatmap,ticks=[0,np.pi/2,np.pi,1.5*np.pi,2*np.pi], label = 'Phase [rad]')
 cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
 plt.xlabel("T [h]")
