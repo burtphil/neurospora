@@ -8,6 +8,7 @@ Created on Mon Sep 11 11:46:21 2017
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
+import colorcet as cc
 
 def get_extrema(y,t):
     """
@@ -259,8 +260,8 @@ plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
 plt.show()
 """
 
-zeitgeber = np.linspace(0,0.1,20)
-tau = np.linspace(10.6,11.6,20)
+zeitgeber = np.linspace(0,0.1,10)
+tau = np.linspace(18,26,10)
 zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,tau)
 entrain_mesh = np.zeros_like(zeit_mesh)
 
@@ -273,12 +274,12 @@ for idx, valx in enumerate(zeitgeber):
         iper = tau[idy]
         ### define t so that there are enough temp cycles to cut out transients
         ### considering highest tau value
-        t       = np.arange(0,3000,0.1)        
+        t       = np.arange(0,6000,0.1)        
         state   = odeint(clock,state0,t,args=(rate,))
               
         ### find time after 85 temp cycles (time res. is 0.1)
         ### then get system state x0 after 85 temp cycles
-        t_state = int(85 * 10 * tau[idy])                        
+        t_state = int(120 * 10 * tau[idy])                        
         x0      = state[t_state:,1]
         tn      = t[t_state:]
         ### do the same for extrinsic zeitgeber function
@@ -294,10 +295,11 @@ for idx, valx in enumerate(zeitgeber):
         ### define entrainment criteria
         ### T-tau should be < 5 minutes
         ### period std should be small
-        c1 = np.abs(tau[idy]-0.5*period)*60
-        c2 = np.std(np.diff(frq_per))
+        c1 = np.abs(tau[idy]-1*period)*60
+        #c2 = np.std(np.diff(frq_per))
         
-        if c1 < 5 and c2 < 0.5 :
+        if c1 < 5:
+            print "entrained"
             if zstr != 0:
                 ph = get_phase(x0,tn,z0,tn)
                 ### normalize phase to 2pi and set entr to that phase
@@ -305,40 +307,22 @@ for idx, valx in enumerate(zeitgeber):
                 
             else: entr = 0
                        
-        print idx*idy
+        print idx
+        print idy
+        print ""
         
         entrain_mesh[idy,idx] = entr
 
 
 ent = entrain_mesh[:-1,:-1]
 
-#np.savez("k1_tongue_200_res", warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
+np.savez("k1_tongue_200_res_2", warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
 
 fig, ax = plt.subplots()
-heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = "hot", edgecolors = "none", vmin = 0, vmax = 2*np.pi)
+heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = cc.m_fire, edgecolors = "none", vmin = 0, vmax = 2*np.pi)
 cbar = fig.colorbar(heatmap,ticks=[0,np.pi/2,np.pi,1.5*np.pi,2*np.pi], label = 'Phase [rad]')
 cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
 plt.xlabel("T [h]")
 plt.ylabel("Z [a.u.]")
 plt.show()       
-"""
-t      = np.arange(0,3000,0.1)
 
-### wha is a proper time resolution?i
-zstr = 0.1
-iper = 23
-### run simulation
-state = odeint(clock,state0,t,args=(rate,)) 
-t_state = int(85 * 10 * iper) 
-x0      = state[t_state:,1]
-tn      = t[t_state:]
-
-
-z_state = z(t)
-z0 = z_state[t_state:]*115-90
-
-plt.plot(tn,x0, tn, z0, "r")
-plt.xlabel("time [h]")
-plt.ylabel("a.u")
-plt.show()
-"""

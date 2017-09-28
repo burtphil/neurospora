@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 p = '/home/burt/neurospora/figures/entrainment/tongue_'
 
+
 t12 = np.load(p+"1_2.npz")
 t21 = np.load(p+"2_1.npz")
 t31 = np.load(p+"3_1.npz")
@@ -46,20 +47,31 @@ t23_ent = t23['ent']
 t11_ent = t11['ent']
 
 labels = ["1:3","1:2","2:3","1:1","3:2","2:1","3:1"]
-ticks = [7.3,11,14.6,22,33,44,66]
+ticks = [7.3,11,14.6,22,33.03,44,66]
 
-fig = plt.figure(figsize=(12,9))
-plt.pcolormesh(t11_wm,t11_zm, t11_ent,cmap = "Greys_r", edgecolors = "none")
-plt.pcolormesh(t12_wm,t12_zm, t12_ent,cmap = "Greys_r", edgecolors = "none")
-plt.pcolormesh(t13_wm,t13_zm, t13_ent,cmap = "Greys_r", edgecolors = "none")
-plt.pcolormesh(t21_wm,t21_zm, t21_ent,cmap = "Greys_r", edgecolors = "none")
-plt.pcolormesh(t31_wm,t31_zm, t31_ent,cmap = "Greys_r", edgecolors = "none")
-plt.pcolormesh(t32_wm,t32_zm, t32_ent,cmap = "Greys_r", edgecolors = "none")
-plt.pcolormesh(t23_wm,t23_zm, t23_ent,cmap = "Greys_r", edgecolors = "none")
-plt.xticks(ticks, labels, fontsize = 16)
-plt.yticks(fontsize = 16)
-plt.xlabel("T [h]", fontsize = 22)
-plt.ylabel("Z [a.u.]", fontsize = 22)
+fig,ax = plt.subplots(figsize=(12,9))
+
+ax.pcolormesh(t11_wm,t11_zm, t11_ent,cmap = "Greys_r", edgecolors = "none")
+ax.pcolormesh(t12_wm,t12_zm, t12_ent,cmap = "Greys_r", edgecolors = "none")
+ax.pcolormesh(t13_wm,t13_zm, t13_ent,cmap = "Greys_r", edgecolors = "none")
+ax.pcolormesh(t21_wm,t21_zm, t21_ent,cmap = "Greys_r", edgecolors = "none")
+ax.pcolormesh(t31_wm,t31_zm, t31_ent,cmap = "Greys_r", edgecolors = "none")
+ax.pcolormesh(t32_wm,t32_zm, t32_ent,cmap = "Greys_r", edgecolors = "none")
+ax.pcolormesh(t23_wm,t23_zm, t23_ent,cmap = "Greys_r", edgecolors = "none")
+ax.set_xticks([0,10,20,30,40,50,60,70])
+ax.set_xlabel("T [h]", fontsize = 22)
+ax.set_ylabel("Z [a.u.]", fontsize = 22)
+ax.set_yticklabels(["0","0.2","0.4","0.6","0.8","0.1"])
+ax.tick_params(labelsize = 16)
+
+ax2 = ax.twiny()
+ax2.set_xlim(0,70)
+ax2.set_xticks(ticks)
+ax2.set_xticklabels(labels)
+ax2.tick_params(length = 0, labelsize = 16)
+
 plt.tight_layout()
 fig.savefig("all_tongues.pdf", dpi = 1200)
 plt.show() 
+
+
