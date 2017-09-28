@@ -8,6 +8,8 @@ Created on Mon Sep 11 11:46:21 2017
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
+import colorcet as cc
+from datetime import datetime
 
 def get_extrema(y,t):
     """
@@ -260,7 +262,7 @@ plt.show()
 """
 
 
-def tongue(zeitgeber, T, upper, lower, res):
+def tongue(zeitgeber, T, upper = 1, lower = 1, res = 3000, phase = 0, tcycle = 85):
     
     ratio = upper/lower
     zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,T)
@@ -283,9 +285,11 @@ def tongue(zeitgeber, T, upper, lower, res):
                   
             ### find time after 85 temp cycles (time res. is 0.1)
             ### then get system state x0 after 85 temp cycles
-            t_state = int(85 * 10 * T[idy])                        
+            t_state = int(tcycle * 10 * T[idy])                        
             x0      = state[t_state:,1]
             tn      = t[t_state:]
+            z_state = z(t)
+            z0      = z_state[t_state:]
             ### do the same for extrinsic zeitgeber function
 
             #z0      = z_state[t_state:]
@@ -301,9 +305,16 @@ def tongue(zeitgeber, T, upper, lower, res):
             c = np.abs(T[idy]-ratio*period)*60
             
             if c < 5:
-                print "entrained!"
-                entr = 0
-                           
+                if phase == 0:
+                    print "entrained!"
+                    entr = 0
+                else:
+                    if zstr != 0:
+                        ph = get_phase(x0,tn,z0,tn)
+                ### normalize phase to 2pi and set entr to that phase
+                        entr = 2*np.pi*ph/iper
+                
+                    else: entr = 0
             print idx
             print idy
             print ""
@@ -313,21 +324,36 @@ def tongue(zeitgeber, T, upper, lower, res):
     
     ent = entrain_mesh[:-1,:-1]
     
-    t_name = 'tongue_'+str(int(upper))+'_'+str(int(lower))
+    
+    date = datetime.strftime(datetime.now(), '%Y_%m_%d')
+    t_name = '_tongue_'+str(int(upper))+'_'+str(int(lower))
     save_to = '/home/burt/neurospora/figures/entrainment/'
-    np.savez(save_to+t_name, warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
+    np.savez(save_to+date+t_name, warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
 
-    fig, ax = plt.subplots()
-    heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = "hot", edgecolors = "none", vmin = 0, vmax = 2*np.pi)
-    cbar = fig.colorbar(heatmap,ticks=[0,np.pi/2,np.pi,1.5*np.pi,2*np.pi], label = 'Phase [rad]')
-    cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
-    plt.xlabel("T [h]")
-    plt.ylabel("Z [a.u.]")
-    plt.savefig(save_to+t_name+".png", dpi=800)
+    fig, ax = plt.subplots(figsize=(12,9))
+    heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = cc.m_fire, edgecolors = "none", vmin = 0, vmax = 2*np.pi)
+ 
+    ax.set_xlabel("T [h]", fontsize =22)
+    ax.set_ylabel("Z [a.u.]", fontsize =22)
+    ax.tick_params(labelsize = 16)
+    
+    if phase == 1:
+        cbar = fig.colorbar(heatmap,ticks=[0,np.pi/2,np.pi,1.5*np.pi,2*np.pi], label = 'Phase [rad]')
+        cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
+        cbar.ax.tick_params(labelsize = 16)
+        cbar.ax.set_ylabel("Phase [rad]", fontsize = 22)
+        
+
+    plt.tight_layout()
+    fig.savefig(save_to+date+t_name+".pdf", dpi=1200)
     plt.show()
 
-zeitgeber = np.linspace(0,0.1,100)
+zeitgeber = np.linspace(0,0.1,10)
+T = np.linspace(16,28,10)
 
+tongue(zeitgeber,T,phase = 1)
+
+"""
 #### 1/1 tongue
 mi = 18.0
 ma = 26.0
@@ -393,7 +419,7 @@ res = 4000
 T = np.linspace(mi,ma,100)
 
 tongue(zeitgeber, T,upper,lower,res) 
-
+"""
     
 """
 t      = np.arange(0,3000,0.1)
