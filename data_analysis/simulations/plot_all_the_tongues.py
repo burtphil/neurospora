@@ -303,8 +303,9 @@ def tongue(zeitgeber, T, upper = 1, lower = 1, res = 3000, phase = 0, tcycle = 8
             ### T-tau should be < 5 minutes
             ### period std should be small
             c = np.abs(T[idy]-ratio*period)*60
+            c2 = np.std(np.diff(frq_per))
             
-            if c < 5:
+            if c < 5 and c2 < 1:
                 if phase == 0:
                     print "entrained!"
                     entr = 0
@@ -326,8 +327,15 @@ def tongue(zeitgeber, T, upper = 1, lower = 1, res = 3000, phase = 0, tcycle = 8
     
     
     date = datetime.strftime(datetime.now(), '%Y_%m_%d')
-    t_name = '_tongue_'+str(int(upper))+'_'+str(int(lower))
+    
+    t_name = '_tongue_'+str(int(upper))+'_'+str(int(lower))+"_z_"+str(round(zeitgeber[-1],1))
+    
+    if phase == 1: 
+        t_name = t_name + "_ph"
+        
     save_to = '/home/burt/neurospora/figures/entrainment/'
+    
+    
     np.savez(save_to+date+t_name, warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
 
     fig, ax = plt.subplots(figsize=(12,9))
@@ -348,97 +356,90 @@ def tongue(zeitgeber, T, upper = 1, lower = 1, res = 3000, phase = 0, tcycle = 8
     fig.savefig(save_to+date+t_name+".pdf", dpi=1200)
     plt.show()
 
-zeitgeber = np.linspace(0,0.1,10)
-T = np.linspace(16,28,10)
 
-tongue(zeitgeber,T,phase = 1)
 
-"""
+
 #### 1/1 tongue
-mi = 18.0
-ma = 26.0
+### plot 1/1 with long transients in black and with phase
+
+
+
+tcycle = 120
+
+#### 1/1 tongue
+
+mi = 10.0
+ma = 60.0
 upper = 1.0
-lower = 1.0
-res = 3000
+lower = 1
+res = 9000
 T = np.linspace(mi,ma,100)
 
-tongue(zeitgeber, T,upper,lower,res)
+zeitgeber = np.linspace(0.0,1,100)
+tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
 
 #### 1/2 tongue
-mi = 10.4
-ma = 11.6
+mi = 7.0
+ma = 15.0
 upper = 1.0
 lower = 2.0
-res = 3000
+res = 5000
 T = np.linspace(mi,ma,100)
 
-tongue(zeitgeber, T,upper,lower,res)
+tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
 
 #### 2/1 tongue
-mi = 43.0
-ma = 45.0
+
+mi = 34.0
+ma = 50.0
 upper = 2.0
 lower = 1.0
-res = 4000
+res = 7000
 T = np.linspace(mi,ma,100)
 
-tongue(zeitgeber, T,upper,lower,res)
-#### 1/3 tongue
-mi = 6.8
-ma = 7.8
-upper = 1.0
-lower = 3.0
-res = 3000
-T = np.linspace(mi,ma,100)
-
-tongue(zeitgeber, T,upper,lower,res)
-#### 3/1 tongue
-mi = 65.5
-ma = 66.6
-upper = 3.0
-lower = 1.0
-res = 10000
-T = np.linspace(mi,ma,100)
-
-tongue(zeitgeber, T,upper,lower,res)
-#### 2/3 tongue
-mi = 14.2
-ma = 15.1
-upper = 2.0
-lower = 3.0
-res = 3000
-T = np.linspace(mi,ma,100)
-
-tongue(zeitgeber, T,upper,lower,res)
-#### 3/2 tongue
-mi = 32.7
-ma = 33.6
+tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
+"""
+### 3 : 2 tongue
+mi = 30.0
+ma = 36.0
 upper = 3.0
 lower = 2.0
-res = 4000
-T = np.linspace(mi,ma,100)
+res = 7000
+T = np.linspace(mi,ma,50)
 
-tongue(zeitgeber, T,upper,lower,res) 
-"""
-    
-"""
-t      = np.arange(0,3000,0.1)
+zeitgeber = np.linspace(0,1,50)
+tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
 
-### wha is a proper time resolution?i
-zstr = 0.1
-iper = 23
-### run simulation
-state = odeint(clock,state0,t,args=(rate,)) 
-t_state = int(85 * 10 * iper) 
-x0      = state[t_state:,1]
-tn      = t[t_state:]
+### 2 : 3 tongue
+mi = 13.5
+ma = 16.0
+upper = 2.0
+lower = 3.0
+res = 5000
+T = np.linspace(mi,ma,50)
 
+zeitgeber = np.linspace(0,1,50)
+tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
 
-z_state = z(t)
-z0 = z_state[t_state:]*115-90
+### 1 : 3 tongue
+mi = 6.5
+ma = 10.0
+upper = 1.0
+lower = 3.0
+res = 5000
+T = np.linspace(mi,ma,50)
 
-plt.plot(tn,x0, tn, z0, "r")
-plt.xlabel("time [h]")
-plt.ylabel("a.u")
-plt.show()
+zeitgeber = np.linspace(0,1,50)
+tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
+
+### 3 : 1 tongue
+mi = 60.0
+ma = 70.0
+upper = 3.0
+lower = 1.0
+res = 9000
+T = np.linspace(mi,ma,50)
+
+zeitgeber = np.linspace(0,1,50)
+tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
 """
