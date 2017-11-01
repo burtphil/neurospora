@@ -9,16 +9,16 @@ Created on Wed Sep 27 09:54:39 2017
 import numpy as np
 import matplotlib.pyplot as plt
 
-p = '/home/burt/neurospora/figures/entrainment/tongue_'
+p = '/home/burt/neurospora/figures/entrainment/arrays/tongue_'
 
 
 t12 = np.load(p+"1_2.npz")
-t21 = np.load(p+"2_1.npz")
+t21 = np.load('/home/burt/neurospora/figures/entrainment/arrays/2017_09_30_tongue_2_1_z_0.1.npz')
 t31 = np.load(p+"3_1.npz")
 t13 = np.load(p+"1_3.npz")
 t32 = np.load(p+"3_2.npz")
 t23 = np.load(p+"2_3.npz")
-t11 = np.load(p+"1_1.npz")
+t11 = np.load("/home/burt/neurospora/figures/entrainment/arrays/2017_09_28_tongue_1_1_z_0.1.npz")
 
 t12_wm = t12['warm_mesh']
 t21_wm = t21['warm_mesh']
@@ -61,7 +61,7 @@ ax.pcolormesh(t23_wm,t23_zm, t23_ent,cmap = "Greys_r", edgecolors = "none")
 ax.set_xticks([0,10,20,30,40,50,60,70])
 ax.set_xlabel("T [h]", fontsize = 22)
 ax.set_ylabel("Z [a.u.]", fontsize = 22)
-ax.set_yticklabels(["0","0.2","0.4","0.6","0.8","0.1"])
+ax.set_yticklabels(["0","0.02","0.04","0.06","0.08","0.1"])
 ax.tick_params(labelsize = 16)
 
 ax2 = ax.twiny()

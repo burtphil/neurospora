@@ -8,8 +8,18 @@ Created on Mon Sep 11 11:46:21 2017
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
-import colorcet as cc
-from datetime import datetime
+import matplotlib.collections as collections
+
+pi = np.pi
+
+def ztan(t,T,kappa, s=10, z0 = 0.07):
+    pi = np.pi
+    om = 2*pi/T
+    mu = pi/(om*np.sin(kappa*pi))
+    cos1 = np.cos(om*t)
+    cos2 = np.cos(kappa*pi)
+    out = 1+2*z0*((1/pi)*np.arctan(s*mu*(cos1-cos2)))
+    return out
 
 def get_extrema(y,t):
     """
@@ -161,8 +171,6 @@ def z(t):
 ### dictionary of parameters
 
 ### rate constants per hour
-
-#rate constants for original model
 rate = {
     'k1'    : 1.8,
     'k2'    : 1.8,
@@ -183,7 +191,6 @@ rate = {
     'K2'    : 1.0
 }
 
-### rate constants for frq1
 rate1 = {
     'k1'    : 1.8,
     'k2'    : 1.8,
@@ -226,7 +233,7 @@ rate7 = {
 }
 ### define ODE clock function
 
-def clock(state, t, rate):
+def clock(state, t, rate, T, kappa):
         ### purpose:simulate Hong et al 2008 model for neuropora clock
 
 
@@ -244,7 +251,7 @@ def clock(state, t, rate):
         ###  ODEs Hong et al 2008
         ### letzter summand unklar bei dtfrqmrna
         
-        dt_frq_mrna     = (z(t) * rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
+        dt_frq_mrna     = (ztan(t,T,kappa) * rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
         dt_frq_c        = rate['k2'] * frq_mrna - ((rate['k3'] + rate['k5']) * frq_c)
         dt_frq_n        = (rate['k3'] * frq_c) + (rate['k14'] * frq_n_wc1_n) - (frq_n * (rate['k6'] + (rate['k13'] * wc1_n)))
         dt_wc1_mrna     = rate['k7'] - (rate['k10'] * wc1_mrna)
@@ -284,206 +291,41 @@ state0 = [frq_mrna0,
           wc1_n0,
           frq_n_wc1_n0]
 
-### set time to integrate
-"""
-t      = np.arange(0,480,0.1)
+### simulation parameters
 
-### what is a proper time resolution?
+T = 19.0
+kappa = 0.5
+warm_dur = kappa*T
 
+t = np.arange(0,120*T,0.1)
 ### run simulation
-state = odeint(clock,state0,t,args=(rate,))  
-"""
-### plot all ODEs
-state_names = ["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"]
-"""
-plt.plot(t,state)
-plt.xlabel("time [h]")
-plt.ylabel("a.u")
-plt.xticks(np.arange(0, 49, 12.0))
-plt.legend(state_names,loc='center left', bbox_to_anchor=(0.6, 0.5))
+state = odeint(clock,state0,t,args=(rate,T,kappa))  
+
+fig, ax = plt.subplots(figsize = (12,9))
+ax.plot(t,state[:,1],"k")
+ax.set_xlabel("t [h]")
+ax.set_ylabel("[FRQ]c [a.u.]")
+ax.set_xlim(t[0], t[-1])
+ax.set_xticks(np.arange(0, int(t[-1]), 200))
+collection = collections.BrokenBarHCollection.span_where(
+    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.2)
+ax.add_collection(collection)
 plt.show()
-"""
 
+t_cut = t[int(-(50*T)):]
+state_cut = state[int(-(50*T)):,1]
 
-def tongue(zeitgeber, T, upper = 1, lower = 1, res = 3000, phase = 0, tcycle = 85):
-    
-    ratio = upper/lower
-    zeit_mesh,warm_mesh = np.meshgrid(zeitgeber,T)
-    entrain_mesh = np.zeros_like(zeit_mesh)
+fig2, ax2 = plt.subplots(figsize = (12,9))
+ax2.plot(t_cut,state_cut,"k")
+ax2.set_xlabel("t [h]")
+ax2.set_ylabel("FRQ]c [a.u.]")
+ax2.set_xlim(t_cut[0], t_cut[-1])
+ax2.set_xticks(np.arange(int(t_cut[0]), int(t_cut[-1]), T/2))
+#ax2.set_xticks(np.arange(0, 1200, 12.0))
+collection = collections.BrokenBarHCollection.span_where(
+    t_cut, ymin=100, ymax=-100, where= ((t_cut % T) <= warm_dur), facecolor='gray', alpha=0.5)
+ax2.add_collection(collection)
+plt.show()
 
-    ### simulate arnold tongue
-    for idx, valx in enumerate(zeitgeber):
-        for idy, valy in enumerate(T):
-            
-            ### set local variables for z(t) function
-            global zstr 
-            global iper
-            zstr= zeitgeber[idx]
-            iper = T[idy]
-
-            ### define t so that there are enough temp cycles to cut out transients
-            ### considering highest tau value
-            t       = np.arange(0,res,0.1)        
-            state   = odeint(clock,state0,t,args=(rate7,))
-                  
-            ### find time after 85 temp cycles (time res. is 0.1)
-            ### then get system state x0 after 85 temp cycles
-            t_state = int(tcycle * 10 * T[idy])                        
-            x0      = state[t_state:,1]
-            tn      = t[t_state:]
-            z_state = z(t)
-            z0      = z_state[t_state:]
-            ### do the same for extrinsic zeitgeber function
-
-            #z0      = z_state[t_state:]
-            
-            ### get extrema and neighbors for zeitgeber function and simulated data
-            frq_per  = get_periods(x0, tn)       
-            period = np.mean(frq_per)        
-            entr = 2*np.pi
-            
-            ### define entrainment criteria
-            ### T-tau should be < 5 minutes
-            ### period std should be small
-            c = np.abs(T[idy]-ratio*period)*60
-            c2 = np.std(np.diff(frq_per))
-            
-            if c < 5 and c2 < 1:
-                if phase == 0:
-                    print "entrained!"
-                    entr = 0
-                else:
-                    if zstr != 0:
-                        ph = get_phase(x0,tn,z0,tn)
-                ### normalize phase to 2pi and set entr to that phase
-                        entr = 2*np.pi*ph/iper
-                
-                    else: entr = 0
-            print idx
-            print idy
-            print ""
-            
-            entrain_mesh[idy,idx] = entr
-    
-    
-    ent = entrain_mesh[:-1,:-1]
-    
-    
-    date = datetime.strftime(datetime.now(), '%Y_%m_%d')
-    
-    t_name = '_tongue_'+str(int(upper))+'_'+str(int(lower))+"_z_"+str(round(zeitgeber[-1],1))
-    
-    if phase == 1: 
-        t_name = t_name + "_ph"
-        
-    save_to = '/home/burt/neurospora/figures/entrainment/'
-    
-    
-    np.savez(save_to+date+t_name, warm_mesh = warm_mesh, zeit_mesh = zeit_mesh, ent = ent)
-
-    fig, ax = plt.subplots(figsize=(12,9))
-    heatmap = ax.pcolormesh(warm_mesh,zeit_mesh, ent, cmap = cc.m_fire, edgecolors = "none", vmin = 0, vmax = 2*np.pi)
- 
-    ax.set_xlabel("T [h]", fontsize =22)
-    ax.set_ylabel("Z [a.u.]", fontsize =22)
-    ax.tick_params(labelsize = 16)
-    
-    if phase == 1:
-        cbar = fig.colorbar(heatmap,ticks=[0,np.pi/2,np.pi,1.5*np.pi,2*np.pi], label = 'Phase [rad]')
-        cbar.ax.set_yticklabels(['0','$\pi/2$','$\pi$','$3\pi/2$', '2$\pi$'])
-        cbar.ax.tick_params(labelsize = 16)
-        cbar.ax.set_ylabel("Phase [rad]", fontsize = 22)
-        
-
-    plt.tight_layout()
-    fig.savefig(save_to+date+t_name+".pdf", dpi=1200)
-    plt.show()
-
-
-
-
-#### 1/1 tongue
-### plot 1/1 with long transients in black and with phase
-
-
-
-tcycle = 120
-
-#### 1/1 tongue
-
-mi = 24.0
-ma = 34.0
-upper = 1.0
-lower = 1
-res = 7000
-T = np.linspace(mi,ma,100)
-
-zeitgeber = np.linspace(0.0,0.1,100)
-tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 1, tcycle = tcycle)
-"""
-#### 1/2 tongue
-mi = 7.0
-ma = 15.0
-upper = 1.0
-lower = 2.0
-res = 5000
-T = np.linspace(mi,ma,100)
-
-tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
-
-#### 2/1 tongue
-
-mi = 34.0
-ma = 50.0
-upper = 2.0
-lower = 1.0
-res = 7000
-T = np.linspace(mi,ma,100)
-
-tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
-
-### 3 : 2 tongue
-mi = 30.0
-ma = 36.0
-upper = 3.0
-lower = 2.0
-res = 7000
-T = np.linspace(mi,ma,50)
-
-zeitgeber = np.linspace(0,1,50)
-tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
-
-### 2 : 3 tongue
-mi = 13.5
-ma = 16.0
-upper = 2.0
-lower = 3.0
-res = 5000
-T = np.linspace(mi,ma,50)
-
-zeitgeber = np.linspace(0,1,50)
-tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
-
-### 1 : 3 tongue
-mi = 6.5
-ma = 10.0
-upper = 1.0
-lower = 3.0
-res = 5000
-T = np.linspace(mi,ma,50)
-
-zeitgeber = np.linspace(0,1,50)
-tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
-
-### 3 : 1 tongue
-mi = 60.0
-ma = 70.0
-upper = 3.0
-lower = 1.0
-res = 9000
-T = np.linspace(mi,ma,50)
-
-zeitgeber = np.linspace(0,1,50)
-tongue(zeitgeber = zeitgeber, T = T,upper = upper,lower = lower,res = res, phase = 0, tcycle = tcycle)
-"""
+test = np.arange(0,10,1)
 
