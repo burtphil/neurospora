@@ -293,14 +293,45 @@ state0 = [frq_mrna0,
 
 ### simulation parameters
 
-T = 19.0
+T = 22.0
 kappa = 0.5
 warm_dur = kappa*T
 
 t = np.arange(0,120*T,0.1)
+
+### make arrays containing only the last part of simulation
 ### run simulation
 state = odeint(clock,state0,t,args=(rate,T,kappa))  
 
+t_cut = t[int(-(50*T)):]
+state_cut = state[int(-(50*T)):,1]
+state_cut2 = state[int(-(50*T)):,0]
+
+### lets make a thermoperiod array
+thermoperiod = np.array([0.00001, 0.25, 0.5, 0.75, 1.0])
+states = []
+frq_mrna = []
+frq_protein = []
+colors = []
+
+for i in thermoperiod:
+    states.append(odeint(clock,state0,t,args=(rate,T,i)))
+    colors.append(np.where((t_cut % T) <= (i*T),'tab:orange',np.where((t_cut % T) > (i*T),'k','k')))
+
+for i in states:
+    frq_mrna.append(i[int(-(50*T)):,0])
+    frq_protein.append(i[int(-(50*T)):,1])
+
+plot_name = ["Continuous darkness", "25 % photoperiod", "50 % photoperiod",
+             "75 % photoperiod", "Continuous light"]  
+
+  
+
+
+
+
+"""
+#### plot whole simulation
 fig, ax = plt.subplots(figsize = (12,9))
 ax.plot(t,state[:,1],"k")
 ax.set_xlabel("t [h]")
@@ -312,13 +343,11 @@ collection = collections.BrokenBarHCollection.span_where(
 ax.add_collection(collection)
 plt.show()
 
-t_cut = t[int(-(50*T)):]
-state_cut = state[int(-(50*T)):,1]
-
+### plot last part of simulation
 fig2, ax2 = plt.subplots(figsize = (12,9))
 ax2.plot(t_cut,state_cut,"k")
 ax2.set_xlabel("t [h]")
-ax2.set_ylabel("FRQ]c [a.u.]")
+ax2.set_ylabel("[FRQ]c [a.u.]")
 ax2.set_xlim(t_cut[0], t_cut[-1])
 ax2.set_xticks(np.arange(int(t_cut[0]), int(t_cut[-1]), T/2))
 #ax2.set_xticks(np.arange(0, 1200, 12.0))
@@ -326,6 +355,28 @@ collection = collections.BrokenBarHCollection.span_where(
     t_cut, ymin=100, ymax=-100, where= ((t_cut % T) <= warm_dur), facecolor='gray', alpha=0.5)
 ax2.add_collection(collection)
 plt.show()
+"""
 
-test = np.arange(0,10,1)
+col = np.where((t_cut % T) <= warm_dur,'tab:orange',np.where((t_cut % T) > warm_dur,'k','k'))
+### plot phase space
+fig3,ax3 = plt.subplots(figsize = (12,9))
+ax3.scatter(state_cut2, state_cut, c = col, s = 8)
+ax3.set_xlabel("frq mRNA [a.u.]", fontsize= 'xx-large')
+ax3.set_ylabel("FRQc [a.u.]",fontsize= 'xx-large')
+ax3.tick_params(labelsize = 'x-large')
+
+
+fig, axes = plt.subplots(1,5,figsize= (18,5))
+axes = axes.flatten()
+for i, ax in enumerate(axes):
+    ax.scatter(frq_mrna[i],frq_protein[i],s = 4, c = colors[i])
+    ax.set_title(plot_name[i])
+    ax.set_xlim([0,8])
+    ax.set_ylim([13,37])
+    ax.tick_params(labelsize = 'x-large')
+fig.text(0.5, 0.01, 'frq mRNA', ha='center', fontsize = 'xx-large')
+fig.text(0.08, 0.5, 'FRQc', va='center', rotation='vertical', fontsize = 'xx-large')
+fig.savefig("phase_plane.pdf",bbox_inches='tight', dpi = 1200)
+
+
 
