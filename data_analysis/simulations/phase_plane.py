@@ -305,151 +305,78 @@ state = odeint(clock,state0,t,args=(rate,T,kappa))
 
 t_cut = t[int(-(50*T)):]
 state_cut = state[int(-(50*T)):,1]
-
+state_cut2 = state[int(-(50*T)):,0]
 
 ### lets make a thermoperiod array
+thermoperiod = np.array([0.00001, 0.25, 0.5, 0.75, 1.0])
+states = []
+frq_mrna = []
+frq_protein = []
+colors = []
 
+for i in thermoperiod:
+    states.append(odeint(clock,state0,t,args=(rate,T,i)))
+    colors.append(np.where((t_cut % T) <= (i*T),'tab:orange',np.where((t_cut % T) > (i*T),'k','k')))
+
+for i in states:
+    frq_mrna.append(i[int(-(50*T)):,0])
+    frq_protein.append(i[int(-(50*T)):,1])
+
+plot_name = ["Continuous cold", "25 % thermoperiod", "50 % thermoperiod",
+             "75 % thermoperiod", "Continuous warmth"]  
+
+  
+
+
+
+
+"""
 #### plot whole simulation
 fig, ax = plt.subplots(figsize = (12,9))
 ax.plot(t,state[:,1],"k")
-ax.set_xlabel("t [h]", fontsize = 'xx-large')
-ax.set_ylabel("FRQc [a.u.]", fontsize = 'xx-large')
+ax.set_xlabel("t [h]")
+ax.set_ylabel("[FRQ]c [a.u.]")
 ax.set_xlim(t[0], t[-1])
 ax.set_xticks(np.arange(0, int(t[-1]), 200))
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.2)
 ax.add_collection(collection)
-ax.tick_params(labelsize = 'x-large')
 plt.show()
 
 ### plot last part of simulation
 fig2, ax2 = plt.subplots(figsize = (12,9))
 ax2.plot(t_cut,state_cut,"k")
-ax2.set_xlabel("t [h]", fontsize = 'xx-large')
-ax2.set_ylabel("FRQc [a.u.]", fontsize = 'xx-large')
+ax2.set_xlabel("t [h]")
+ax2.set_ylabel("[FRQ]c [a.u.]")
 ax2.set_xlim(t_cut[0], t_cut[-1])
 ax2.set_xticks(np.arange(int(t_cut[0]), int(t_cut[-1]), T/2))
 #ax2.set_xticks(np.arange(0, 1200, 12.0))
 collection = collections.BrokenBarHCollection.span_where(
     t_cut, ymin=100, ymax=-100, where= ((t_cut % T) <= warm_dur), facecolor='gray', alpha=0.5)
 ax2.add_collection(collection)
-ax2.tick_params(labelsize = 'x-large')
 plt.show()
-
-### simulate different traces for frq1
-
-
-def func(T,kappa):
-    """
-    Take zeitgeber cycle and thermoperiod as argument
-    simulate system for 120 temp cycles
-    cut off everything but last 5 temp cycles
-    return cut off trace, corresponding time points and warm dur
-    as list
-    """
-    t = np.arange(0,120*T,0.1)
-    state = odeint(clock,state0,t,args=(rate,T,kappa))
-    trace = state[int(-(50*T)):,1]
-    t_cut = t[int(-(50*T)):]
-    warm_dur = kappa*T
-    
-    return [t_cut,trace,warm_dur]
-    
-fig, axes = plt.subplots(4,1,figsize = (12,9))
-axes = axes.flatten()
-ax = axes[0]
-ax1 = axes[1]
-#ax2 = axes[2]
-ax3 = axes[2]
-ax4 = axes[3]
-
-### show 1:1 entrainment for kappa = 0.5
-T       = 22.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
-
-ax.plot(t,trace,"k")
-ax.set_xlim(t[0], t[-1])
-ax.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax.add_collection(collection)
-ax.tick_params(labelsize = 'x-large')
-ax.set_title("1:1 entrained, T=22, k = 0.5")
-### show 1:1 entrainment for kappa = 0.75
-
-T       = 22.0
-kappa   = 0.25
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
-
-ax1.plot(t,trace,"k")
-ax1.set_xlim(t[0], t[-1])
-ax1.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax1.add_collection(collection)
-ax1.tick_params(labelsize = 'x-large')
-ax1.set_title("1:1 entrained, T=22, k = 0.25")
 """
-### show 1:1 entrainment for T = 20 kappa = 0.5
 
-T       = 20.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
-
-ax2.plot(t,trace,"k")
-ax2.set_xlim(t[0], t[-1])
-ax2.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax2.add_collection(collection)
-ax2.tick_params(labelsize = 'x-large')
-"""
-### show 1:2 entrainment for T=11, kappa = 0.5
-T       = 11.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
-
-ax3.plot(t,trace,"k")
-ax3.set_xlim(t[0], t[-1])
-ax3.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax3.add_collection(collection)
+col = np.where((t_cut % T) <= warm_dur,'tab:orange',np.where((t_cut % T) > warm_dur,'k','k'))
+### plot phase space
+fig3,ax3 = plt.subplots(figsize = (12,9))
+ax3.scatter(state_cut2, state_cut, c = col, s = 8)
+ax3.set_xlabel("frq mRNA [a.u.]", fontsize= 'xx-large')
+ax3.set_ylabel("FRQc [a.u.]",fontsize= 'xx-large')
 ax3.tick_params(labelsize = 'x-large')
-ax3.set_title("1:2 entrained, T=11, k = 0.5")
-### show no entrainment for T=26, kappa = 0.5
-T       = 26.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
 
-ax4.plot(t,trace,"k")
-ax4.set_xlim(t[0], t[-1])
-ax4.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax4.add_collection(collection)
-ax4.tick_params(labelsize = 'x-large')
-ax4.set_title("Not entrained, T=26, k = 0.5")
 
-fig.tight_layout()
+fig, axes = plt.subplots(1,5,figsize= (18,5))
+axes = axes.flatten()
+for i, ax in enumerate(axes):
+    ax.scatter(frq_mrna[i],frq_protein[i],s = 4, c = colors[i])
+    ax.set_title(plot_name[i])
+    ax.set_xlim([0,8])
+    ax.set_ylim([13,37])
+    ax.tick_params(labelsize = 'x-large')
+fig.text(0.5, 0.01, 'frq mRNA', ha='center', fontsize = 'xx-large')
+fig.text(0.08, 0.5, 'FRQc', va='center', rotation='vertical', fontsize = 'xx-large')
+fig.savefig("phase_plane.pdf",bbox_inches='tight', dpi = 1200)
 
-fig.savefig("traces.pdf", dpi = 1200)
-plt.show()    
-    
+
 
