@@ -172,7 +172,7 @@ plt.title('FRQn:WC-1n')
 plt.tight_layout()
 plt.show()
 
-
+"""
 ### make dummy to iterate over state
 dummy = np.array([0,1,2,3,4,5,6])
 
@@ -230,6 +230,6 @@ for idx, valx in enumerate(state_names):
     else:
         phases_dict[valx] = np.nan
 
-
+"""
 
 
