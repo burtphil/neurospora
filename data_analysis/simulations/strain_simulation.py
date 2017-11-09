@@ -9,10 +9,9 @@ This temporary script file is located here:
 
 import numpy as np
 
-import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
-from scipy.signal import argrelextrema
+
 
 ####### implement biological model Hong et al 2008
 
@@ -39,6 +38,46 @@ rate = {
     'K2'    : 1.0
 }
 
+rate1 = {
+    'k1'    : 1.8,
+    'k2'    : 1.8,
+    'k3'    : 0.15,
+    'k4'    : 0.23,
+    'k5'    : 0.4,
+    'k6'    : 0.1,
+    'k7'    : 0.5,
+    'k8'    : 0.8,
+    'k9'    : 40.0,
+    'k10'   : 0.3,
+    'k11'   : 0.05,
+    'k12'   : 0.02,
+    'k13'   : 50.0,
+    'k14'   : 1.0,
+    'k15'   : 8.0,
+    'K'     : 1.25,
+    'K2'    : 1.0
+}
+
+### rate constants for frq7
+rate7 = {
+    'k1'    : 1.8,
+    'k2'    : 1.8,
+    'k3'    : 0.05,
+    'k4'    : 0.23,
+    'k5'    : 0.15,
+    'k6'    : 0.01,
+    'k7'    : 0.5,
+    'k8'    : 0.8,
+    'k9'    : 40.0,
+    'k10'   : 0.3,
+    'k11'   : 0.05,
+    'k12'   : 0.02,
+    'k13'   : 50.0,
+    'k14'   : 1.0,
+    'k15'   : 8.0,
+    'K'     : 1.25,
+    'K2'    : 1.0
+}
 ### define ODE clock function
 
 def clock(state, t, rate):
@@ -101,55 +140,31 @@ state0 = [frq_mrna0,
 
 ### set time to integrate
 
-t      = np.arange(0,480,0.1)
+t      = np.arange(0,240,0.1)
 
 ### what is a proper time resolution?
 
 ### run simulation
 state = odeint(clock,state0,t,args=(rate,))  
-
+state1 = odeint(clock,state0,t,args=(rate1,)) 
+state7 = odeint(clock,state0,t,args=(rate7,)) 
 ### plot all ODEs
 state_names = ["frq mRNA","FRQc","FRQn","wc-1 mRNA","WC-1c","WC-1n","FRQn:WC-1n"]
 
 
-ylabel = "FRQc [a.u.]"
-
-plt.plot(t,state)
-plt.xlabel("time [h]", fontsize= 'xx-large')
-plt.ylabel("a.u.", fontsize= 'xx-large')
-#plt.xticks(np.arange(0, 49, 12.0))
-plt.legend(state_names,loc='upper right')
-plt.tick_params(labelsize= 'x-large')
-plt.tight_layout()
-plt.show()
-plt.savefig("simulation1.pdf",dpi=1200)
 
 ###
-plt.figure(figsize=(10,12))
-plt.subplot(3,1,1)
-plt.plot(t, state[:,4],"purple")
+plt.figure(figsize=(12,9))
+plt.subplot(111)
+plt.plot(t, state[:,1], label= "frq+")
+plt.plot(t, state1[:,1], label = "frq1")
+plt.plot(t, state7[:,1], label = "frq7")
+plt.xlim((140,240))
 plt.xlabel("time [h]", fontsize= 'xx-large')
-plt.ylabel('WC-1c', fontsize= 'xx-large')
+plt.ylabel('FRQc', fontsize= 'xx-large')
 plt.tick_params(labelsize= 'x-large')
+plt.legend(loc = 1)
 
-#plt.xticks(np.arange(0, 49, 12.0))
-#plt.title('WC-1c')
-
-plt.subplot(3,1,2)
-plt.plot(t, state[:,2],"g")
-plt.xlabel("time [h]", fontsize= 'xx-large')
-plt.ylabel('FRQn', fontsize= 'xx-large')
-plt.tick_params(labelsize= 'x-large')
-#plt.xticks(np.arange(0, 49, 12.0))
-#plt.title('FRQn')
-
-plt.subplot(3,1,3)
-plt.plot(t, state[:,6],"pink")
-plt.xlabel("time [h]", fontsize= 'xx-large')
-plt.ylabel('FRQn:WC-1n', fontsize= 'xx-large')
-plt.tick_params(labelsize= 'x-large')
-#plt.xticks(np.arange(0, 49, 12.0))
-#plt.title('FRQn:WC-1n')
-plt.savefig("simulation2.pdf",dpi=1200)
+plt.savefig("simulation_strains.pdf",dpi=1200)
 plt.tight_layout()
 plt.show()
