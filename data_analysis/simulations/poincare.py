@@ -300,12 +300,12 @@ def plotstyle(ax,xlabel,ylabel):
     #ax.set_xlim(xlim)
     #ax.set_ylim(ylim)
 ### simulation parameters
-Tcycle= np.arange(8,30,.5)
+Tcycle= np.array([27.9])
 
-thermoperiod= np.array([.25,.5,.75])
-zeitgeber_strength = np.array([.4,.5])
+thermoperiod= np.array([.75])
+zeitgeber_strength = np.array([.222,.224,.226,.228])
 
-save_to = "/home/burt/figures/chaos2/"
+save_to = "/home/burt/figures/chaos4/"
 
 
 #### plot poincare sections for varying T and kappa
@@ -373,9 +373,9 @@ for T in Tcycle:
 #### this is for plotting 2 trajectories
 
 ###chaos params!!!
-T = 28.5
+T = 27.9
 kappa = 0.75
-z0 = 0.3
+z0 = 0.21
 
 t = np.arange(0,240*T,0.1)
 
@@ -412,3 +412,16 @@ ax3.plot(t,FRQ2, c = 'tab:orange')
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(wc,FRQ1,frq1)
+ax.grid(False)
+ax.set_xlabel("a")
+ax.set_ylabel("b")
+ax.set_zlabel("c")
+                        
+ax.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0)) 
+ax.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0)) 
+ax.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0)) 
+
+# Get rid of the spines                         
+ax.w_xaxis.line.set_color("black") 
+ax.w_yaxis.line.set_color("black") 
+ax.w_zaxis.line.set_color("black")
