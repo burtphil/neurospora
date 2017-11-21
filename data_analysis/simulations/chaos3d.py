@@ -8,10 +8,8 @@ Created on Mon Sep 11 11:46:21 2017
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
-import matplotlib.collections as collections
 from mpl_toolkits.mplot3d import Axes3D
-import string
-
+from matplotlib.ticker import MultipleLocator
 
 pi = np.pi
 
@@ -298,241 +296,83 @@ state1 = [4.7,
 Tcycle= np.array([27.9])
 
 thermoperiod= np.array([.75])
-zeitgeber_strength = np.array([.222,.224,.226,.228])
-
-save_to = "/home/burt/figures/chaos4/"
+zeitgeber_strength = np.array([.21,.22,.23])
 
 
-#### plot poincare sections for varying T and kappa
-"""
-
-for T in Tcycle:
-    for kappa in thermoperiod:
-        for z0 in zeitgeber_strength:
-            
-            t = np.arange(0,240*T,0.1)
-            
-            ### make arrays containing only the last part of simulation
-            ### run simulation
-            state = odeint(clock,state0,t,args=(rate,T,kappa,z0))  
-            
-            
-            ### keep only last 50 T cycles
-            
-            s1 = state[int(-(10*120*T)):,:]
-            t1 = t[int(-(10*120*T)):]
-            
-            frq = s1[:,0]
-            FRQ = s1[:,1]
-            ### for these 50 T cycles, keep only every  Tth entry
-            poincare = s1[::(int(10*T)),:]
-            poincare_frq = poincare[:,0]
-            poincare_FRQ = poincare[:,1]
-            
-            #### prepare data frame to plot only last 5 cycles
-            trace = state[int(-(50*T)):,1]
-            t = t[int(-(50*T)):]
-            warm_dur = kappa*T
-            
-            fig,axes = plt.subplots(1,2,figsize=(24,9))
-            
-            axes.flatten()
-            ax = axes[0]
-            ax1 = axes[1]
-    
-            title = "T= "+str(T)+" kappa= "+str(kappa)+" z0= "+str(z0)
-            ax.plot(t,trace,"k")
-            ax.set_xlim(t[0], t[-1])
-            ax.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-            #ax2.set_xticks(np.arange(0, 1200, 12.0))
-            collection = collections.BrokenBarHCollection.span_where(
-            t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-            ax.add_collection(collection)
-            ax.tick_params(labelsize = 'x-large')
-    
-            ax1.scatter(poincare_frq,poincare_FRQ, c = 'k', marker = 'x', zorder = 2)
-            ax1.plot(frq,FRQ, c = "lightgray", zorder = 1)
-            
-            ax1.set_title(title)
-            plt.tight_layout()
-            fig.savefig(save_to+"k_"+str(kappa)+"z_"+str(z0)+"T_"+str(T)+".png")
-            plt.close(fig)
-
-"""
-
-
-#### simulate with params which show limit cycle behavior
-lim_T = 22
-lim_z0 = .1
-lim_kappa = .5 
-
-t = np.arange(0,200*lim_T,0.1)
-lim_t_short = t[int(-(50*lim_T)):]
-
-lim_state = odeint(clock,state0,t,args=(rate,lim_T,lim_kappa,lim_z0))  
-lim_s1 = lim_state[int(-(10*80*lim_T)):,:]
-lim_t1 = t[int(-(10*80*lim_T)):]           
-lim_frq = lim_s1[:,0]
-lim_FRQ = lim_s1[:,1]
-lim_poincare = lim_s1[::(int(10*lim_T)),:]
-lim_poincare_frq = lim_poincare[:,0]
-lim_poincare_FRQ = lim_poincare[:,1]
-lim_trace = lim_state[int(-(50*lim_T)):,1]
-lim_warm_dur = lim_kappa*lim_T
-
-#### simulate with params which show torus behavior
-tor_T = 16.5
-tor_z0 = .3
-tor_kappa = .5 
-
-t = np.arange(0,200*tor_T,0.1)
-tor_t_short = t[int(-(50*tor_T)):]
-
-tor_state = odeint(clock,state0,t,args=(rate,tor_T,tor_kappa,tor_z0))  
-tor_s1 = tor_state[int(-(10*80*tor_T)):,:]
-tor_t1 = t[int(-(10*80*tor_T)):]           
-tor_frq = tor_s1[:,0]
-tor_FRQ = tor_s1[:,1]
-tor_poincare = tor_s1[::(int(10*tor_T)),:]
-tor_poincare_frq = tor_poincare[:,0]
-tor_poincare_FRQ = tor_poincare[:,1]
-tor_trace = tor_state[int(-(50*tor_T)):,1]
-tor_warm_dur = tor_kappa*tor_T
-
-#### simulate with params which show chaotic behavior
-chaos_T = 27.9
-chaos_kappa = 0.75
-chaos_z0 = 0.27 
-
-t = np.arange(0,200*chaos_T,0.1)
-chaos_t_short = t[int(-(50*chaos_T)):]
-
-
-chaos_state = odeint(clock,state0,t,args=(rate,chaos_T,chaos_kappa,chaos_z0))  
-chaos_s1 = chaos_state[int(-(10*80*chaos_T)):,:]
-chaos_t1 = t[int(-(10*80*chaos_T)):]           
-chaos_frq = chaos_s1[:,0]
-chaos_FRQ = chaos_s1[:,1]
-chaos_poincare = chaos_s1[::(int(10*chaos_T)),:]
-chaos_poincare_frq = chaos_poincare[:,0]
-chaos_poincare_FRQ = chaos_poincare[:,1]
-chaos_trace = chaos_state[int(-(50*chaos_T)):,1]
-chaos_warm_dur = chaos_kappa*chaos_T
-
-
-def ylabels(axes):
-    for ax in axes:
-        ax.set_ylabel("$FRQ_c$ (a.u.)", fontsize = 'xx-large')
-        
-def plotstyle(axes):
-    for ax in axes:
-        ax.tick_params(labelsize = 'x-large')
-
-fig,axes = plt.subplots(3,2, figsize=(12,9))
-
-axes = axes.flatten()
-ax=axes[0]
-ax1=axes[1]
-ax2=axes[2]
-ax3=axes[3]
-ax4=axes[4]
-ax5=axes[5]
-
-#### limit cycle plots    
-ax.plot(lim_t_short,lim_trace,"k")
-ax.set_xlim(lim_t_short[0], lim_t_short[-1])
-ax.set_xticks(np.arange(int(lim_t_short[0]), int(lim_t_short[-1]), lim_T))
-           #ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-        lim_t_short, ymin=100, ymax=-100, where= ((lim_t_short % lim_T) <= lim_warm_dur), facecolor='gray', alpha=0.5)
-ax.add_collection(collection)
-ax.tick_params(labelsize = 'x-large')
-    
-ax1.scatter(lim_poincare_frq,lim_poincare_FRQ, c = 'k', marker = 'x', zorder = 2)
-ax1.plot(lim_frq,lim_FRQ, c = "lightgray", zorder = 1)
-
-### torus plots
-ax2.plot(tor_t_short,tor_trace,"k")
-ax2.set_xlim(tor_t_short[0], tor_t_short[-1])
-ax2.set_xticks(np.arange(int(tor_t_short[0]), int(tor_t_short[-1]), tor_T))
-           #ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-        tor_t_short, ymin=100, ymax=-100, where= ((tor_t_short % tor_T) <= tor_warm_dur), facecolor='gray', alpha=0.5)
-ax2.add_collection(collection)
-ax2.tick_params(labelsize = 'x-large')
-    
-ax3.scatter(tor_poincare_frq,tor_poincare_FRQ, c = 'k', marker = 'x', zorder = 2)
-ax3.plot(tor_frq,tor_FRQ, c = "lightgray", zorder = 1)
-
-### chaos plots
-ax4.plot(chaos_t_short,chaos_trace,"k")
-ax4.set_xlim(chaos_t_short[0], chaos_t_short[-1])
-ax4.set_xticks(np.arange(int(chaos_t_short[0]), int(chaos_t_short[-1]), chaos_T))
-           #ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-        chaos_t_short, ymin=100, ymax=-100, where= ((chaos_t_short % chaos_T) <= chaos_warm_dur), facecolor='gray', alpha=0.5)
-ax4.add_collection(collection)
-ax4.tick_params(labelsize = 'x-large')
-ax4.set_xlabel("time (h)", fontsize = 'xx-large')
-    
-ax5.scatter(chaos_poincare_frq,chaos_poincare_FRQ, c = 'k', marker = 'x', zorder = 2)
-ax5.plot(chaos_frq,chaos_FRQ, c = "lightgray", zorder = 1)
-ax5.set_xlabel("frq mRNA (a.u.)", fontsize = 'xx-large')
-
-ylabels(axes=[ax,ax1,ax2,ax3,ax4,ax5])
-plotstyle(axes=[ax1,ax3,ax5])
-
-for n, ax in enumerate(axes): 
-    ax.text(-0.13, .97, string.ascii_uppercase[n], transform=ax.transAxes, 
-            size=20, weight='bold')
-
-plt.tight_layout()
-fig.savefig("poincare_maps.pdf",dpi=1200)
 #col = np.where((t_cut % T) <= warm_dur,'tab:orange',np.where((t_cut % T) > warm_dur,'k','k'))
 ### plot phase space
 
 #### this is for plotting 2 trajectories
-"""
+
 ###chaos params!!!
 T = 27.9
 kappa = 0.75
-z0 = 0.21
+zeitgeber = np.array([0.16,0.22,0.27])
 
-t = np.arange(0,240*T,0.1)
+t = np.arange(0,100*T,0.1)
 
-state = odeint(clock,state0,t,args=(rate,T,kappa,z0))
-state2 = odeint(clock,state1,t,args=(rate,T,kappa,z0))
+frq = []
+FRQ = []
+wc = []
+for z in zeitgeber:
+    state = odeint(clock,state0,t,args=(rate,T,kappa,z))   
+    s1 = state[int(-(10*50*T)):,:]
 
-s1 = state[int(-(10*100*T)):,:]
-s2 = state2[int(-(10*100*T)):,:]
-
-t = t[int(-(10*100*T)):]   
+    
+    t = t[int(-(10*50*T)):]   
 
      
-frq1 = s1[:,0]
-FRQ1 = s1[:,1]
-wc   = s1[:,5]      
-frq2 = s2[:,0]
-FRQ2 = s2[:,1]
+    frq1 = s1[:,0]
+    FRQ1 = s1[:,1]
+    wc1   = s1[:,5]
+
+    frq.append(frq1)
+    FRQ.append(FRQ1)
+    wc.append(wc1)   
+
         ### for these 50 T cycles, keep only every  Tth entry
 
-       
-fig,axes = plt.subplots(1,4, figsize=(12,9))
-axes.flatten()
+azim = 45
+elev = 15
 
-ax = axes[0]
-ax1 = axes[1]
-ax2 = axes[2]
-ax3 = axes[3]
+def plotstyle(axes):
+    for ax in axes:
+        ax.set_xlabel("WC-1n", fontsize = 'xx-large',labelpad=10)
+        ax.set_ylabel("FRQc", fontsize = 'xx-large',labelpad=10)
+        ax.set_zlabel("frq mRNA", fontsize = 'xx-large')
+        ax.tick_params(labelsize= 'x-large')
+        ax.xaxis.set_major_locator(MultipleLocator(2))
+        ax.yaxis.set_major_locator(MultipleLocator(10))
+        ax.zaxis.set_major_locator(MultipleLocator(2))
+        
+        [t.set_va('center') for t in ax.get_yticklabels()]
+        [t.set_ha('left') for t in ax.get_yticklabels()]
+        [t.set_va('center') for t in ax.get_xticklabels()]
+        [t.set_ha('right') for t in ax.get_xticklabels()]
+        [t.set_va('center') for t in ax.get_zticklabels()]
+        [t.set_ha('left') for t in ax.get_zticklabels()]
 
-ax.plot(frq1,FRQ1, c = "k")
-ax1.plot(frq2,FRQ2,c ='tab:orange')
-ax2.plot(t,FRQ1, c = "k") 
-ax3.plot(t,FRQ2, c = 'tab:orange') 
+fig = plt.figure(figsize=(15,5))
+ax = fig.add_subplot(131, projection='3d')
+ax.plot(wc[0],FRQ[0],frq[0],'k')
+ax.view_init(elev = elev,azim=45)
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.plot(wc,FRQ1,frq1)
+
+ax1 =fig.add_subplot(132, projection = '3d')
+ax1.plot(wc[1],FRQ[1],frq[1],'k')
+ax1.view_init(elev = elev,azim=45)
+
+ax2 =fig.add_subplot(133, projection = '3d')
+ax2.plot(wc[2],FRQ[2],frq[2],'k')
+ax2.view_init(elev = elev,azim=45)
+
+plotstyle(axes=[ax,ax1,ax2])
+
+
+
+plt.tight_layout()
+fig.savefig("chaos.pdf",dpi=1200)
+"""
 ax.grid(False)
 ax.set_xlabel("a")
 ax.set_ylabel("b")
