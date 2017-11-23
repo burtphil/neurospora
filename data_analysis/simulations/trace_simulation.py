@@ -446,8 +446,13 @@ collection = collections.BrokenBarHCollection.span_where(
 ax4.add_collection(collection)
 ax4.tick_params(labelsize = 'x-large')
 ax4.set_title("Not entrained, T=26, k = 0.5")
+ax4.set_xlabel("time (h)", fontsize = "xx-large")
 
-fig.tight_layout()
+for ax in axes:
+    ax.set_ylabel("$FRQ_c$", fontsize = "xx-large")
+
+
+plt.tight_layout()
 
 fig.savefig("traces.pdf", dpi = 1200)
 plt.show()    
