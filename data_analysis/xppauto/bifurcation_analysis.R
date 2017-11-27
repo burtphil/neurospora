@@ -1,4 +1,4 @@
-setwd("/home/burt/neurospora/data_analysis/xppauto")
+setwd("/home/burt/neurospora/")
 
 ### load packages
 require(tidyverse)
