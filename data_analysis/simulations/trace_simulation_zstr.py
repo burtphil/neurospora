@@ -12,13 +12,13 @@ import matplotlib.collections as collections
 
 pi = np.pi
 
-def ztan(t,T,kappa, s=10, z0 = 0.07):
+def ztan(t,T,zstr, s=10, kappa = 0.5):
     pi = np.pi
     om = 2*pi/T
     mu = pi/(om*np.sin(kappa*pi))
     cos1 = np.cos(om*t)
     cos2 = np.cos(kappa*pi)
-    out = 1+2*z0*((1/pi)*np.arctan(s*mu*(cos1-cos2)))
+    out = 1+2*zstr*((1/pi)*np.arctan(s*mu*(cos1-cos2)))
     return out
 
 def get_extrema(y,t):
@@ -156,15 +156,6 @@ def get_phase(a,ta, b, tb):
     return c
 
 
-### global variables
-### dummy variables for z(t) fct
-zstr = 0
-iper = 22
-
-### define functions
-def z(t):
-    out = 1 + zstr*np.cos(2*np.pi*t/iper)
-    return out
 
 ####### implement biological model Hong et al 2008
 
@@ -233,7 +224,7 @@ rate7 = {
 }
 ### define ODE clock function
 
-def clock(state, t, rate, T, kappa):
+def clock(state, t, rate, T, zstr):
         ### purpose:simulate Hong et al 2008 model for neuropora clock
 
 
@@ -251,7 +242,7 @@ def clock(state, t, rate, T, kappa):
         ###  ODEs Hong et al 2008
         ### letzter summand unklar bei dtfrqmrna
         
-        dt_frq_mrna     = (ztan(t,T,kappa) * rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
+        dt_frq_mrna     = (ztan(t,T,zstr) * rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
         dt_frq_c        = rate['k2'] * frq_mrna - ((rate['k3'] + rate['k5']) * frq_c)
         dt_frq_n        = (rate['k3'] * frq_c) + (rate['k14'] * frq_n_wc1_n) - (frq_n * (rate['k6'] + (rate['k13'] * wc1_n)))
         dt_wc1_mrna     = rate['k7'] - (rate['k10'] * wc1_mrna)
@@ -294,14 +285,14 @@ state0 = [frq_mrna0,
 ### simulation parameters
 
 T = 22.0
-kappa = 0.5
-warm_dur = kappa*T
+zstr = 0.1
+
 
 t = np.arange(0,120*T,0.1)
 
 ### make arrays containing only the last part of simulation
 ### run simulation
-state = odeint(clock,state0,t,args=(rate,T,kappa))  
+state = odeint(clock,state0,t,args=(rate,T,zstr))  
 
 t_cut = t[int(-(50*T)):]
 state_cut = state[int(-(50*T)):,1]
@@ -317,13 +308,13 @@ ax.set_ylabel("FRQc [a.u.]", fontsize = 'xx-large')
 ax.set_xlim(t[0], t[-1])
 ax.set_xticks(np.arange(0, int(t[-1]), 200))
 collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.2)
+    t, ymin=100, ymax=-100, where= ((t % T) <= (T*0.5)), facecolor='gray', alpha=0.2)
 ax.add_collection(collection)
 ax.tick_params(labelsize = 'x-large')
 plt.show()
 
 ### plot last part of simulation
-fig2, ax2 = plt.subplots(figsize = (12,9))
+fig2, ax2 = plt.subplots(figsize = (12,4))
 ax2.plot(t_cut,state_cut,"k")
 ax2.set_xlabel("t [h]", fontsize = 'xx-large')
 ax2.set_ylabel("FRQc [a.u.]", fontsize = 'xx-large')
@@ -331,15 +322,18 @@ ax2.set_xlim(t_cut[0], t_cut[-1])
 ax2.set_xticks(np.arange(int(t_cut[0]), int(t_cut[-1]), T/2))
 #ax2.set_xticks(np.arange(0, 1200, 12.0))
 collection = collections.BrokenBarHCollection.span_where(
-    t_cut, ymin=100, ymax=-100, where= ((t_cut % T) <= warm_dur), facecolor='gray', alpha=0.5)
+    t_cut, ymin=100, ymax=-100, where= ((t_cut % T) <= (T*0.5)), facecolor='gray', alpha=0.5)
 ax2.add_collection(collection)
 ax2.tick_params(labelsize = 'x-large')
+ax2.set_title("z0=0.1, T = 22 h")
+plt.tight_layout()
+fig2.savefig("trace_zstr.pdf", dpi = 1200)
 plt.show()
 
 ### simulate different traces for frq1
 
 
-def func(T,kappa):
+def func(T,zstr):
     """
     Take zeitgeber cycle and thermoperiod as argument
     simulate system for 120 temp cycles
@@ -348,7 +342,7 @@ def func(T,kappa):
     as list
     """
     t = np.arange(0,120*T,0.1)
-    state = odeint(clock,state0,t,args=(rate,T,kappa))
+    state = odeint(clock,state0,t,args=(rate,T,zstr))
     trace = state[int(-(50*T)):,1]
     t_cut = t[int(-(50*T)):]
     warm_dur = kappa*T
@@ -375,7 +369,7 @@ ax.set_xlim(t[0], t[-1])
 ax.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
 #ax2.set_xticks(np.arange(0, 1200, 12.0))
 collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
+    t, ymin=100, ymax=-100, where= ((t % T) <= (T*0.5)), facecolor='gray', alpha=0.5)
 ax.add_collection(collection)
 ax.tick_params(labelsize = 'x-large')
 ax.set_title("1:1 entrained, T=22, k = 0.5")
@@ -392,7 +386,7 @@ ax1.set_xlim(t[0], t[-1])
 ax1.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
 #ax2.set_xticks(np.arange(0, 1200, 12.0))
 collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
+    t, ymin=100, ymax=-100, where= ((t % T) <= (T*0.5)), facecolor='gray', alpha=0.5)
 ax1.add_collection(collection)
 ax1.tick_params(labelsize = 'x-large')
 ax1.set_title("1:1 entrained, T=22, k = 0.25")
@@ -426,7 +420,7 @@ ax3.set_xlim(t[0], t[-1])
 ax3.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
 #ax2.set_xticks(np.arange(0, 1200, 12.0))
 collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
+    t, ymin=100, ymax=-100, where= ((t % T) <= (T*0.5)), facecolor='gray', alpha=0.5)
 ax3.add_collection(collection)
 ax3.tick_params(labelsize = 'x-large')
 ax3.set_title("1:2 entrained, T=11, k = 0.5")
@@ -442,17 +436,12 @@ ax4.set_xlim(t[0], t[-1])
 ax4.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
 #ax2.set_xticks(np.arange(0, 1200, 12.0))
 collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
+    t, ymin=100, ymax=-100, where= ((t % T) <= (T*0.5)), facecolor='gray', alpha=0.5)
 ax4.add_collection(collection)
 ax4.tick_params(labelsize = 'x-large')
 ax4.set_title("Not entrained, T=26, k = 0.5")
-ax4.set_xlabel("time (h)", fontsize = "xx-large")
 
-for ax in axes:
-    ax.set_ylabel("$FRQ_c$", fontsize = "xx-large")
-
-
-plt.tight_layout()
+fig.tight_layout()
 
 fig.savefig("traces.pdf", dpi = 1200)
 plt.show()    

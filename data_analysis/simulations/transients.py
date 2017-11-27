@@ -9,10 +9,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 import matplotlib.collections as collections
+import string
+
 
 pi = np.pi
 
-def ztan(t,T,kappa, s=10, z0 = 0.07):
+def ztan(t,T,kappa,z0, s=10):
     pi = np.pi
     om = 2*pi/T
     mu = pi/(om*np.sin(kappa*pi))
@@ -156,16 +158,6 @@ def get_phase(a,ta, b, tb):
     return c
 
 
-### global variables
-### dummy variables for z(t) fct
-zstr = 0
-iper = 22
-
-### define functions
-def z(t):
-    out = 1 + zstr*np.cos(2*np.pi*t/iper)
-    return out
-
 ####### implement biological model Hong et al 2008
 
 ### dictionary of parameters
@@ -233,7 +225,7 @@ rate7 = {
 }
 ### define ODE clock function
 
-def clock(state, t, rate, T, kappa):
+def clock(state, t, rate,T,kappa,z0):
         ### purpose:simulate Hong et al 2008 model for neuropora clock
 
 
@@ -251,7 +243,7 @@ def clock(state, t, rate, T, kappa):
         ###  ODEs Hong et al 2008
         ### letzter summand unklar bei dtfrqmrna
         
-        dt_frq_mrna     = (ztan(t,T,kappa) * rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
+        dt_frq_mrna     = (ztan(t,T,kappa,z0)*rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
         dt_frq_c        = rate['k2'] * frq_mrna - ((rate['k3'] + rate['k5']) * frq_c)
         dt_frq_n        = (rate['k3'] * frq_c) + (rate['k14'] * frq_n_wc1_n) - (frq_n * (rate['k6'] + (rate['k13'] * wc1_n)))
         dt_wc1_mrna     = rate['k7'] - (rate['k10'] * wc1_mrna)
@@ -275,8 +267,8 @@ def clock(state, t, rate, T, kappa):
 
 ### set initial conditions for each ODE
 
-frq_mrna0    = 4.0
-frq_c0       = 30.0
+frq_mrna0    = 4.5
+frq_c0       = 25
 frq_n0       = 0.1
 wc1_mrna0    = (0.5 / 0.3)
 wc1_c0       = 0.03225
@@ -291,170 +283,218 @@ state0 = [frq_mrna0,
           wc1_n0,
           frq_n_wc1_n0]
 
+state1 = [4.7,
+          25,
+          frq_n0,
+          wc1_mrna0,
+          wc1_c0,
+          wc1_n0,
+          frq_n_wc1_n0]
+
+
+
+    
+    
 ### simulation parameters
-
-T = 22.0
-kappa = 0.5
-warm_dur = kappa*T
-
-t = np.arange(0,120*T,0.1)
-
-### make arrays containing only the last part of simulation
-### run simulation
-state = odeint(clock,state0,t,args=(rate,T,kappa))  
-
-t_cut = t[int(-(50*T)):]
-state_cut = state[int(-(50*T)):,1]
+Tcycle= np.array([14.29,14.299,25.333,25.334])
 
 
-### lets make a thermoperiod array
+z0 = np.array([.5])
+z1 = np.array([.1])
 
-#### plot whole simulation
-fig, ax = plt.subplots(figsize = (12,9))
-ax.plot(t,state[:,1],"k")
-ax.set_xlabel("t [h]", fontsize = 'xx-large')
-ax.set_ylabel("FRQc [a.u.]", fontsize = 'xx-large')
-ax.set_xlim(t[0], t[-1])
-ax.set_xticks(np.arange(0, int(t[-1]), 200))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.2)
-ax.add_collection(collection)
-ax.tick_params(labelsize = 'x-large')
-plt.show()
+kappa= np.array([.5])
 
-### plot last part of simulation
-fig2, ax2 = plt.subplots(figsize = (12,9))
-ax2.plot(t_cut,state_cut,"k")
-ax2.set_xlabel("t [h]", fontsize = 'xx-large')
-ax2.set_ylabel("FRQc [a.u.]", fontsize = 'xx-large')
-ax2.set_xlim(t_cut[0], t_cut[-1])
-ax2.set_xticks(np.arange(int(t_cut[0]), int(t_cut[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t_cut, ymin=100, ymax=-100, where= ((t_cut % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax2.add_collection(collection)
-ax2.tick_params(labelsize = 'x-large')
-plt.show()
-
-### simulate different traces for frq1
+save_to = "/home/burt/figures/transients2/"
 
 
-def func(T,kappa):
-    """
-    Take zeitgeber cycle and thermoperiod as argument
-    simulate system for 120 temp cycles
-    cut off everything but last 5 temp cycles
-    return cut off trace, corresponding time points and warm dur
-    as list
-    """
-    t = np.arange(0,120*T,0.1)
-    state = odeint(clock,state0,t,args=(rate,T,kappa))
-    trace = state[int(-(50*T)):,1]
-    t_cut = t[int(-(50*T)):]
-    warm_dur = kappa*T
+t_list =[]
+FRQ_list = []
+FRQ_last = []
+FRQ_first = []
+t_last = []
+t_first = []
+day_night_first = []
+day_night_end = []
+#### plot poincare sections for varying T and kappa
+
+
+for T in Tcycle:
     
-    return [t_cut,trace,warm_dur]
+    t = np.arange(0,150*T,0.1)
     
-fig, axes = plt.subplots(4,1,figsize = (12,9))
+    if (T == 25.333 or T == 25.334):
+         z0 = .1
+         t = np.arange(0,126*T,0.1)
+         
+    
+    t_l = t[int(-(50*T)):]
+    t_f =t[:int((50*T))]
+    
+    
+    t_list.append(t)
+    t_last.append(t_l)
+    t_first.append(t_f)
+    ### make arrays containing only the last part of simulation
+    ### run simulation
+    state = odeint(clock,state0,t,args=(rate,T,kappa,z0))  
+    
+    FRQ = state[:,1]
+    FRQ_l = state[int(-(50*T)):,1]
+    FRQ_f = state[:int((50*T)),1]
+    
+    FRQ_list.append(FRQ)
+    FRQ_last.append(FRQ_l)
+    FRQ_first.append(FRQ_f)
+    
+    warm_dur = kappa * T
+    
+    day_night_f = collections.BrokenBarHCollection.span_where(
+        t_f, ymin=100, ymax=-100, where= ((t_f % T) <= warm_dur), facecolor='gray', alpha=0.5)
+    
+    day_night_l = collections.BrokenBarHCollection.span_where(
+        t_l, ymin=100, ymax=-100, where= ((t_l % T) <= warm_dur), facecolor='gray', alpha=0.5)
+    
+    day_night_first.append(day_night_f)
+    day_night_end.append(day_night_l)
+
+def plotstyle(ax,t,T, ticks = 1):
+    ax.set_xlim(t[0], t[-1])
+    ax.set_xticks(np.arange(int(t[0]), int(t[-1]),ticks * T))
+
+def ylabels(axes):
+    for ax in axes:
+        ax.set_ylabel("$FRQ_c$ (a.u.)", fontsize = 'xx-large')
+
+def xlabels(axes):
+    for ax in axes:
+        ax.set_xlabel("time (h)", fontsize = 'xx-large')
+
+def ticks(axes):
+    for ax in axes:
+        ax.tick_params(labelsize= 'x-large')
+            
+fig,axes = plt.subplots(4,3, figsize=(12,9))
+
 axes = axes.flatten()
-ax = axes[0]
-ax1 = axes[1]
-#ax2 = axes[2]
-ax3 = axes[2]
-ax4 = axes[3]
+ax=axes[0]
+ax1=axes[1]
+ax2=axes[2]
+ax3=axes[3]
+ax4=axes[4]
+ax5=axes[5]
+ax6=axes[6]
+ax7=axes[7]
+ax8=axes[8]
+ax9=axes[9]
+ax10=axes[10]
+ax11=axes[11]
 
-### show 1:1 entrainment for kappa = 0.5
-T       = 22.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
 
-ax.plot(t,trace,"k")
+ax.plot(t_first[0],FRQ_first[0],'k')
+ax.add_collection(day_night_first[0])
+ax.set_ylabel("$FRQ_c$ (a.u.)", fontsize = 'xx-large')
+ax.set_title("First five T-cycles", fontsize = 'xx-large')
+plotstyle(ax,t_first[0],Tcycle[0])
+ax1.plot(t_list[0],FRQ_list[0],'k')
+ax1.set_title("Whole simulation", fontsize = 'xx-large')
+ax2.plot(t_last[0],FRQ_last[0],'k')
+ax2.set_title("Last five T-cycles", fontsize = 'xx-large')
+ax2.add_collection(day_night_end[0])
+plotstyle(ax2,t_last[0],Tcycle[0], ticks = 2)
+
+ax3.plot(t_first[1],FRQ_first[1],'k')
+ax3.add_collection(day_night_first[1])
+plotstyle(ax3,t_first[1],Tcycle[1])
+ax4.plot(t_list[1],FRQ_list[1],'k')
+ax5.plot(t_last[1],FRQ_last[1],'k')
+ax5.add_collection(day_night_end[1])
+plotstyle(ax5,t_last[1],Tcycle[1], ticks = 2)
+
+ax6.plot(t_first[2],FRQ_first[2],'k')
+ax6.add_collection(day_night_first[2])
+plotstyle(ax6,t_first[2],Tcycle[2])
+ax7.plot(t_list[2],FRQ_list[2],'k')
+ax8.plot(t_last[2],FRQ_last[2],'k')
+ax8.add_collection(day_night_end[2])
+plotstyle(ax8,t_last[2],Tcycle[2], ticks = 2)
+
+ax9.plot(t_first[3],FRQ_first[3],'k')
+ax9.add_collection(day_night_first[3])
+plotstyle(ax9,t_first[3],Tcycle[3])
+ax10.plot(t_list[3],FRQ_list[3],'k')
+ax11.plot(t_last[3],FRQ_last[3],'k')
+ax11.add_collection(day_night_end[3])
+ax11.set_yticks([20,30])
+plotstyle(ax11,t_last[3],Tcycle[3], ticks = 2)
+
+for n, ax in enumerate(axes): 
+    ax.text(-0.15, .97, string.ascii_uppercase[n], transform=ax.transAxes, 
+            size=20, weight='bold')
+
+ylabels([ax3,ax6,ax9])
+xlabels([ax9,ax10,ax11])
+ticks(axes)
+plt.tight_layout()
+fig.savefig("transients.pdf",dpi=1200)
+plt.show()
+"""
+def plotstyle(ax,xlabel,ylabel):
+    ax.set_xlabel(xlabel,fontsize= 'xx-large')
+    ax.set_ylabel(ylabel,fontsize= 'xx-large')
+    ax.tick_params(labelsize = 'x-large')
+    
+trace = state[int(-(50*T)):,1]
+t = t[int(-(50*T)):]
 ax.set_xlim(t[0], t[-1])
 ax.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
 #ax2.set_xticks(np.arange(0, 1200, 12.0))
+
 collection = collections.BrokenBarHCollection.span_where(
     t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
+
 ax.add_collection(collection)
-ax.tick_params(labelsize = 'x-large')
-ax.set_title("1:1 entrained, T=22, k = 0.5")
-### show 1:1 entrainment for kappa = 0.75
-
-T       = 22.0
-kappa   = 0.25
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
-
-ax1.plot(t,trace,"k")
-ax1.set_xlim(t[0], t[-1])
-ax1.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax1.add_collection(collection)
-ax1.tick_params(labelsize = 'x-large')
-ax1.set_title("1:1 entrained, T=22, k = 0.25")
 """
-### show 1:1 entrainment for T = 20 kappa = 0.5
 
-T       = 20.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
-
-ax2.plot(t,trace,"k")
-ax2.set_xlim(t[0], t[-1])
-ax2.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax2.add_collection(collection)
-ax2.tick_params(labelsize = 'x-large')
 """
-### show 1:2 entrainment for T=11, kappa = 0.5
-T       = 11.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
+            warm_dur = kappa*T
+            
+            fig,ax = plt.subplots(figsize=(24,9))
 
-ax3.plot(t,trace,"k")
-ax3.set_xlim(t[0], t[-1])
-ax3.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax3.add_collection(collection)
-ax3.tick_params(labelsize = 'x-large')
-ax3.set_title("1:2 entrained, T=11, k = 0.5")
-### show no entrainment for T=26, kappa = 0.5
-T       = 26.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
+            title = "T= "+str(T)+" kappa= "+str(kappa)+" z0= "+str(z0)
+            ax.plot(t,FRQ,"k")
+            ax.set_xlim(t[0], t[-1])
+            ax.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
+            #ax2.set_xticks(np.arange(0, 1200, 12.0))
+            #collection = collections.BrokenBarHCollection.span_where(
+            #t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
+            #ax.add_collection(collection)
+            ax.tick_params(labelsize = 'x-large')
 
-ax4.plot(t,trace,"k")
-ax4.set_xlim(t[0], t[-1])
-ax4.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax4.add_collection(collection)
-ax4.tick_params(labelsize = 'x-large')
-ax4.set_title("Not entrained, T=26, k = 0.5")
-ax4.set_xlabel("time (h)", fontsize = "xx-large")
+            #fig.savefig(save_to+"k_"+str(kappa)+"z_"+str(z0)+"T_"+str(T)+".png")
+            plt.close(fig)
+"""
+"""
+for T in Tcycle1:
+     for z0 in zeitgeber_strength1:
+            
+            t = np.arange(0,240*T,0.1)
+            t_l = t[int(-(50*T)):]
+            t_f =t[:int((50*T))]
+            
+            
+            t_list.append(t)
+            t_last.append(t_l)
+            t_first.append(t_f)
+            ### make arrays containing only the last part of simulation
+            ### run simulation
+            state = odeint(clock,state0,t,args=(rate,T,kappa,z0))  
+            
 
-for ax in axes:
-    ax.set_ylabel("$FRQ_c$", fontsize = "xx-large")
-
-
-plt.tight_layout()
-
-fig.savefig("traces.pdf", dpi = 1200)
-plt.show()    
-    
-
+            FRQ = state[:,1]
+            FRQ_l = state[int(-(50*T)):,1]
+            FRQ_f = state[:int((50*T)),1]
+            
+            FRQ_list.append(FRQ)
+            FRQ_last.append(FRQ_l)
+            FRQ_first.append(FRQ_f)
+"""

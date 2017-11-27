@@ -8,7 +8,6 @@ Created on Mon Sep 11 11:46:21 2017
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
-import matplotlib.collections as collections
 
 pi = np.pi
 
@@ -156,16 +155,6 @@ def get_phase(a,ta, b, tb):
     return c
 
 
-### global variables
-### dummy variables for z(t) fct
-zstr = 0
-iper = 22
-
-### define functions
-def z(t):
-    out = 1 + zstr*np.cos(2*np.pi*t/iper)
-    return out
-
 ####### implement biological model Hong et al 2008
 
 ### dictionary of parameters
@@ -233,7 +222,7 @@ rate7 = {
 }
 ### define ODE clock function
 
-def clock(state, t, rate, T, kappa):
+def clock(state, t, rate):
         ### purpose:simulate Hong et al 2008 model for neuropora clock
 
 
@@ -251,7 +240,7 @@ def clock(state, t, rate, T, kappa):
         ###  ODEs Hong et al 2008
         ### letzter summand unklar bei dtfrqmrna
         
-        dt_frq_mrna     = (ztan(t,T,kappa) * rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
+        dt_frq_mrna     = (rate['k1'] * (wc1_n**2) / (rate['K'] + (wc1_n**2))) - (rate['k4'] * frq_mrna) 
         dt_frq_c        = rate['k2'] * frq_mrna - ((rate['k3'] + rate['k5']) * frq_c)
         dt_frq_n        = (rate['k3'] * frq_c) + (rate['k14'] * frq_n_wc1_n) - (frq_n * (rate['k6'] + (rate['k13'] * wc1_n)))
         dt_wc1_mrna     = rate['k7'] - (rate['k10'] * wc1_mrna)
@@ -275,8 +264,8 @@ def clock(state, t, rate, T, kappa):
 
 ### set initial conditions for each ODE
 
-frq_mrna0    = 4.0
-frq_c0       = 30.0
+frq_mrna0    = 6
+frq_c0       = 17
 frq_n0       = 0.1
 wc1_mrna0    = (0.5 / 0.3)
 wc1_c0       = 0.03225
@@ -291,170 +280,68 @@ state0 = [frq_mrna0,
           wc1_n0,
           frq_n_wc1_n0]
 
+state1 = [4,
+          25,
+          frq_n0,
+          wc1_mrna0,
+          wc1_c0,
+          wc1_n0,
+          frq_n_wc1_n0]
+
 ### simulation parameters
 
-T = 22.0
-kappa = 0.5
-warm_dur = kappa*T
 
-t = np.arange(0,120*T,0.1)
+t = np.arange(0,200,0.1)
 
 ### make arrays containing only the last part of simulation
 ### run simulation
-state = odeint(clock,state0,t,args=(rate,T,kappa))  
-
-t_cut = t[int(-(50*T)):]
-state_cut = state[int(-(50*T)):,1]
-
-
-### lets make a thermoperiod array
-
-#### plot whole simulation
-fig, ax = plt.subplots(figsize = (12,9))
-ax.plot(t,state[:,1],"k")
-ax.set_xlabel("t [h]", fontsize = 'xx-large')
-ax.set_ylabel("FRQc [a.u.]", fontsize = 'xx-large')
-ax.set_xlim(t[0], t[-1])
-ax.set_xticks(np.arange(0, int(t[-1]), 200))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.2)
-ax.add_collection(collection)
-ax.tick_params(labelsize = 'x-large')
-plt.show()
-
-### plot last part of simulation
-fig2, ax2 = plt.subplots(figsize = (12,9))
-ax2.plot(t_cut,state_cut,"k")
-ax2.set_xlabel("t [h]", fontsize = 'xx-large')
-ax2.set_ylabel("FRQc [a.u.]", fontsize = 'xx-large')
-ax2.set_xlim(t_cut[0], t_cut[-1])
-ax2.set_xticks(np.arange(int(t_cut[0]), int(t_cut[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t_cut, ymin=100, ymax=-100, where= ((t_cut % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax2.add_collection(collection)
-ax2.tick_params(labelsize = 'x-large')
-plt.show()
-
-### simulate different traces for frq1
+state = odeint(clock,state0,t,args=(rate,))  
+state1 = odeint(clock,state1,t,args=(rate,)) 
+ 
 
 
-def func(T,kappa):
-    """
-    Take zeitgeber cycle and thermoperiod as argument
-    simulate system for 120 temp cycles
-    cut off everything but last 5 temp cycles
-    return cut off trace, corresponding time points and warm dur
-    as list
-    """
-    t = np.arange(0,120*T,0.1)
-    state = odeint(clock,state0,t,args=(rate,T,kappa))
-    trace = state[int(-(50*T)):,1]
-    t_cut = t[int(-(50*T)):]
-    warm_dur = kappa*T
+
+
+
+#col = np.where((t_cut % T) <= warm_dur,'tab:orange',np.where((t_cut % T) > warm_dur,'k','k'))
+### plot phase space
+
+def plotstyle(ax,xlabel,ylabel):
+    ax.set_xlabel(xlabel,fontsize= 'xx-large')
+    ax.set_ylabel(ylabel,fontsize= 'xx-large')
+    ax.tick_params(labelsize = 'x-large')
     
-    return [t_cut,trace,warm_dur]
     
-fig, axes = plt.subplots(4,1,figsize = (12,9))
-axes = axes.flatten()
-ax = axes[0]
-ax1 = axes[1]
-#ax2 = axes[2]
-ax3 = axes[2]
-ax4 = axes[3]
+fig3,axes = plt.subplots(2,2,figsize = (12,9))
 
-### show 1:1 entrainment for kappa = 0.5
-T       = 22.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
+axes=axes.flatten()
+ax0=axes[0]
+ax1=axes[1]
+ax2=axes[2]
+ax3=axes[3]
 
-ax.plot(t,trace,"k")
-ax.set_xlim(t[0], t[-1])
-ax.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax.add_collection(collection)
-ax.tick_params(labelsize = 'x-large')
-ax.set_title("1:1 entrained, T=22, k = 0.5")
-### show 1:1 entrainment for kappa = 0.75
+ax0.plot(t,state1[:,1],'k')
+plotstyle(ax0,"t [h]","FRQc [a.u]")
 
-T       = 22.0
-kappa   = 0.25
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
+ax1.plot(state1[:,0],state1[:,1],'k')
+plotstyle(ax1,"frq mRNA", "FRQc [a.u.]")
 
-ax1.plot(t,trace,"k")
-ax1.set_xlim(t[0], t[-1])
-ax1.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax1.add_collection(collection)
-ax1.tick_params(labelsize = 'x-large')
-ax1.set_title("1:1 entrained, T=22, k = 0.25")
+ax2.plot(t,state[:,1],'k')
+plotstyle(ax2,"t [h]","FRQc [a.u]")
+
+ax3.plot(state[:,0],state[:,1],'k')
+plotstyle(ax3,"frq mRNA", "FRQc [a.u.]")
+fig3.savefig("model_limit_cycles.pdf",dpi=1200)
+
 """
-### show 1:1 entrainment for T = 20 kappa = 0.5
-
-T       = 20.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
-
-ax2.plot(t,trace,"k")
-ax2.set_xlim(t[0], t[-1])
-ax2.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax2.add_collection(collection)
-ax2.tick_params(labelsize = 'x-large')
-"""
-### show 1:2 entrainment for T=11, kappa = 0.5
-T       = 11.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
-
-ax3.plot(t,trace,"k")
-ax3.set_xlim(t[0], t[-1])
-ax3.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax3.add_collection(collection)
+ax3.plot(state_cut2, state_cut,c= "k")
+ax3.set_xlabel("frq mRNA [a.u.]", fontsize= 'xx-large')
+ax3.set_ylabel("FRQc [a.u.]",fontsize= 'xx-large')
 ax3.tick_params(labelsize = 'x-large')
-ax3.set_title("1:2 entrained, T=11, k = 0.5")
-### show no entrainment for T=26, kappa = 0.5
-T       = 26.0
-kappa   = 0.5
-trace   = func(T,kappa)[1]
-t       = func(T,kappa)[0]
-warm_dur = func(T,kappa)[2]
 
-ax4.plot(t,trace,"k")
-ax4.set_xlim(t[0], t[-1])
-ax4.set_xticks(np.arange(int(t[0]), int(t[-1]), T/2))
-#ax2.set_xticks(np.arange(0, 1200, 12.0))
-collection = collections.BrokenBarHCollection.span_where(
-    t, ymin=100, ymax=-100, where= ((t % T) <= warm_dur), facecolor='gray', alpha=0.5)
-ax4.add_collection(collection)
-ax4.tick_params(labelsize = 'x-large')
-ax4.set_title("Not entrained, T=26, k = 0.5")
-ax4.set_xlabel("time (h)", fontsize = "xx-large")
-
-for ax in axes:
-    ax.set_ylabel("$FRQ_c$", fontsize = "xx-large")
-
-
-plt.tight_layout()
-
-fig.savefig("traces.pdf", dpi = 1200)
-plt.show()    
-    
-
+fig,ax = plt.subplots(figsize = (12,9))
+ax.plot(t, state_cut,c= "k")
+ax.set_xlabel("frq mRNA [a.u.]", fontsize= 'xx-large')
+ax.set_ylabel("FRQc [a.u.]",fontsize= 'xx-large')
+ax.tick_params(labelsize = 'x-large')
+"""
