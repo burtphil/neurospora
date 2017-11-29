@@ -1,4 +1,4 @@
-setwd("/home/burt/neurospora/data_analysis/xppauto/production/appendix")
+setwd("/home/burt/neurospora/data_analysis/xppauto/rates_complex")
 
 ### load packages
 require(tidyverse)
@@ -66,8 +66,8 @@ plot_per <- function(df){
 
 
 ### define a theme for plotting
-size_axis <- element_text(face="bold", size = 30)
-size_ticks <- element_text(face="bold", size = 30, color = "black")
+size_axis <- element_text(face="bold", size = 24)
+size_ticks <- element_text(face="bold", size = 12, color = "black")
 size_line <- element_line(color = "black", size = 2)
 
 theme_thesis <- theme_few() +
@@ -76,7 +76,7 @@ theme_thesis <- theme_few() +
         axis.title.x = element_text(margin = margin(0.5, 0, 0, 0, "cm")),
         axis.text = size_ticks,
         axis.ticks = size_line,
-        axis.ticks.length=unit(2,"mm"),
+        axis.ticks.length=unit(1,"mm"),
         panel.border = element_rect(size = 2, color = "black")
   )
 
@@ -108,29 +108,36 @@ amp.bif <- map(amp.bif,plot_amps)
 per.bif <- map(per.bif, plot_per)
 
 amp.bif[[1]] <- amp.bif[[1]]+
-  labs(x=expression(bold(k[2])))+
-  scale_x_continuous(breaks = c(1.6,1.8,2.0))
+  labs(x=expression(bold(K)))
 
 per.bif[[1]] <- per.bif[[1]]+
-  labs(x=expression(bold(k[2])))+
-  scale_y_continuous(breaks = c(10,20,30))
+  labs(x=expression(bold(K)))
+
 
 amp.bif[[2]] <- amp.bif[[2]]+
-  labs(x=expression(bold(k[8])))+
-  scale_x_continuous(breaks = c(0,0.2,0.4,0.6,0.8), labels = c("0","0.2","0.4","0.6","0.8"))
+  labs(x=expression(bold(k["12"])))
 
 per.bif[[2]] <- per.bif[[2]]+
-  labs(x=expression(bold(k[8])))+
-  scale_y_continuous(breaks = c(10,20,30))
+  labs(x=expression(bold(k["12"])))
+
+
+amp.bif[[3]] <- amp.bif[[3]]+
+  labs(x=expression(bold(k["15"])))
+
+per.bif[[3]] <- per.bif[[3]]+
+  labs(x=expression(bold(k["15"])))
+
 
 plot_grid(amp.bif[[1]],
           per.bif[[1]],
           amp.bif[[2]],
           per.bif[[2]],
+          amp.bif[[3]],
+          per.bif[[3]],
           ncol=2,
           labels = "AUTO",
           vjust = 1.1,
           label_size = 30
 )
 
-ggsave("production_terms_appendix.pdf", dpi = 1200, width = 12, height = 8, units = "in")
+ggsave("rates_complex.pdf", dpi = 1200, width = 12, height = 9, units = "in")

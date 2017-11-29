@@ -114,41 +114,34 @@ pos_frq = state[:,1] / (1+ state[:,1])
 
 def style(axes):
     for ax in axes:
-        ax.set_xlabel("time (h)", fontsize = 'xx-large')
-        ax.set_ylabel("$FRQ_c:(K+FRQ_c)$", fontsize = 'xx-large')
-        ax.set_xticks([0,60,120])
+        ax.set_ylabel("$FRQ_c:(K+FRQ_c)$", fontsize = 'xx-large')        
         ax.tick_params(labelsize= 'x-large')
 
-fig, axes = plt.subplots(1,3,figsize = (12,4))
+fig, axes = plt.subplots(1,2,figsize = (12,4))
 
 axes.flatten()
 ax = axes[0]
-ax1 = axes[1]
-ax2 = axes[2]
+ax2 = axes[1]
 
 ax.plot(t,pos_frq, 'k')
 ax.set_ylim(0.9,1)
 ax.set_yticks([0.9,0.95,1])
-
-ax1.plot(t, pos_frq, 'k')
-#ax.set_ylim(0,2)
-ax1.set_yticks([0,1,2])
+ax.set_xlabel("time (h)", fontsize = 'xx-large')
+ax.set_xticks([0,60,120])
 
 ax2.plot(state[:,1],pos_frq, 'k')
 ax2.set_xlabel("$FRQ_c$", fontsize = "xx-large")
-ax2.set_ylabel("$FRQ_c:(K+FRQ_c)$", fontsize = 'xx-large')
 ax2.set_yticks([0,1,2])
 ax2.set_ylim(0,2)
 ax2.set_xticks([15,25,35])
-ax2.tick_params(labelsize="x-large")
 
-style([ax,ax1])
+style([ax,ax2])
 
-ax.text(-0.29, .98, "A", transform=ax.transAxes, size=20, weight='bold')
-axes = [ax1,ax2]
-for n, ax in enumerate(axes): 
-    ax.text(-0.19, .98, string.ascii_uppercase[n+1], transform=ax.transAxes, 
-            size=20, weight='bold')
+ax.text(-0.17, .98, "A", transform=ax.transAxes, 
+    size=20, weight='bold')
+
+ax.text(1.03, .98, "B", transform=ax.transAxes, 
+    size=20, weight='bold')
 
 
     

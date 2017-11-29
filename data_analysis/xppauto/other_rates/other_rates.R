@@ -1,4 +1,4 @@
-setwd("/home/burt/neurospora/data_analysis/xppauto/production/appendix")
+setwd("/home/burt/neurospora/data_analysis/xppauto/other_rates")
 
 ### load packages
 require(tidyverse)
@@ -57,7 +57,6 @@ plot_per <- function(df){
   
   per.plot <- bifurcation + 
     geom_line(data=per, aes(par,period), color = "black", size = 1)+
-    coord_cartesian(ylim = c(borders - 12, borders + 12))+
     labs(x="",y ="Period (h)")+
     theme_thesis
   
@@ -108,29 +107,32 @@ amp.bif <- map(amp.bif,plot_amps)
 per.bif <- map(per.bif, plot_per)
 
 amp.bif[[1]] <- amp.bif[[1]]+
-  labs(x=expression(bold(k[2])))+
-  scale_x_continuous(breaks = c(1.6,1.8,2.0))
+  labs(x=expression(bold(k["01"])))+
+  scale_x_continuous(breaks = c(0,0.5,1), labels = c("0","0.5","1.0"))+
+  scale_y_continuous(breaks = c(2,4,6,8))
 
 per.bif[[1]] <- per.bif[[1]]+
-  labs(x=expression(bold(k[2])))+
-  scale_y_continuous(breaks = c(10,20,30))
+  labs(x=expression(bold(k["01"])))+
+  scale_y_continuous(limits = c(14,30), breaks = c(18,22,26))+
+  scale_x_continuous(breaks = c(0.25,0.5,0.75))
 
 amp.bif[[2]] <- amp.bif[[2]]+
-  labs(x=expression(bold(k[8])))+
-  scale_x_continuous(breaks = c(0,0.2,0.4,0.6,0.8), labels = c("0","0.2","0.4","0.6","0.8"))
+  labs(x=expression(bold(k["02"])))+
+  scale_y_continuous(breaks = c(2,4,6))+
+  scale_x_continuous(breaks = c(0,0.05,0.1,0.15), labels = c("0","0.05","0.10","0.15"))
 
 per.bif[[2]] <- per.bif[[2]]+
-  labs(x=expression(bold(k[8])))+
-  scale_y_continuous(breaks = c(10,20,30))
+  labs(x=expression(bold(k["02"])))+
+  scale_y_continuous(limits = c(14,30), breaks = c(18,22,26))
 
 plot_grid(amp.bif[[1]],
-          per.bif[[1]],
-          amp.bif[[2]],
-          per.bif[[2]],
-          ncol=2,
-          labels = "AUTO",
-          vjust = 1.1,
-          label_size = 30
+    per.bif[[1]],
+    amp.bif[[2]],
+    per.bif[[2]],
+    ncol=2,
+    labels = "AUTO",
+    label_size = 30
 )
 
-ggsave("production_terms_appendix.pdf", dpi = 1200, width = 12, height = 8, units = "in")
+ggsave("other_rates.pdf", dpi = 1200, width = 19.5, height = 15, units = "in")
+

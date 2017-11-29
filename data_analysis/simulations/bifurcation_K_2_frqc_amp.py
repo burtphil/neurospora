@@ -290,7 +290,9 @@ for idx, valx in enumerate(bif_array):
 ##############################################################################
 ### plot the bifurcation
 datestring = datetime.strftime(datetime.now(), '%Y-%m-%d')
-save_to = 'C:/Users/Philipp/Desktop/neurospora/figures/bifurcations/frq_tot/'
+save_to = '/home/burt/neurospora/figures/bifurcations/frq_tot/bif_new/'
+
+np.savez(save_to+"K2_bif",bif_array = bif_array, frq_tot_max_array = frq_tot_max_array, frq_tot_min_array = frq_tot_min_array, period_frq_tot_array = period_frq_tot_array)
 
 
 plt.figure(figsize=(20,10))
