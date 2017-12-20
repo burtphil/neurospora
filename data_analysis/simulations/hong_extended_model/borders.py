@@ -8,10 +8,12 @@ Created on Mon Sep 11 11:46:21 2017
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
-import colorcet as cc
-from datetime import datetime
-import matplotlib.collections as collections
+#import colorcet as cc
+#from datetime import datetime
+#import matplotlib.collections as collections
 
+from scipy.signal import argrelextrema, hilbert, chirp
+from scipy import interpolate
 
 def ztan(t,T,z0,kappa, s=1):
     pi = np.pi
@@ -22,10 +24,6 @@ def ztan(t,T,z0,kappa, s=1):
     out = 1+2*z0*((1/pi)*np.arctan(s*mu*(cos1-cos2)))
     return out
 
-### define functions
-def z(t,T,z0, kappa):
-    out = 1 + z0*np.cos(2*np.pi*t/T)
-    return out
 
 
 def get_extrema(y,t):
@@ -292,14 +290,16 @@ def border_behavior(z_strength, z_per, strain = rate, tcycle = 80, kappa = 0.5, 
             ### then get system state x0 after 85 temp cycles
 
             ### do the same for extrinsic zeitgeber function
-    lt = int(-(60*10*T))     
+    lt = int(-(25*10*T))     
             
     x0      = state[lt:,1]            
     tn      = t[lt:]
            
             ### get extrema and neighbors for zeitgeber function and simulated data
     frq_per  = get_periods(x0, tn)       
-    period = np.mean(frq_per)        
+    period = np.mean(frq_per)
+
+    print period        
             
             ### define entrainment criteria
             ### T-tau should be < 5 minutes
@@ -308,21 +308,19 @@ def border_behavior(z_strength, z_per, strain = rate, tcycle = 80, kappa = 0.5, 
     z_minima=np.arange(T/2,tcycle*T,T)
                 #ph = get_phase(x0,tn,z0,tn)
                 ### normalize phase to 2pi and set entr to that phase
-    a = get_xmax(state[:,1],t)[-60:]
-    b = z_minima[-60:]
+    a = get_xmax(state[:,1],t)[-15:-1]
+    b = z_minima[-15:-1]
     
     c = a-b
     
-    if np.sum(c)>0:
-        phase = 2*np.pi*c/T
-    else:
-        a=a+T
-        c = a-b
-        phase = 2*np.pi*c/T
+    
+    c[c<0]=T+c[c<0]
     
     
-        
-        
+    phase = 2*np.pi*c/T
+    
+
+       
     save_to = '/home/burt/neurospora/figures/desync/'
     
     fig, axes = plt.subplots(2,1,figsize=(12,9))
@@ -330,22 +328,176 @@ def border_behavior(z_strength, z_per, strain = rate, tcycle = 80, kappa = 0.5, 
     ax = axes[0]
     ax1 = axes[1]
     
-    ax.plot(t,state[:,1],"k")
-    ax1.plot(phase)
+    ax.plot(tn,x0,"k")
+    ax1.plot(tn, ztan(tn,T,z0,0.5),"k")
     
-    fig.savefig(save_to+"border"+"T_"+str(T)+".png")
-    plt.close(fig)
-    
-        
-tper = np.linspace(20,21.5,10)
-
-for i in tper: 
-    print i
-    border_behavior(0.05,i)
-    
-    
-        
-            
-
+    #fig.savefig(save_to+"border"+"T_"+str(T)+".png")
+    #plt.close(fig)
     
 
+#zstr = 0.05
+#T = 27
+
+#border_behavior(zstr,20.0)
+
+def border2(zstr,T):
+
+    
+    t       = np.arange(0,5000,.1)        
+    state   = odeint(clock,state0,t,args=(rate,T,zstr,.5,ztan))
+    z = ztan(t,T,zstr,.5)
+    trans = 30000
+
+    t       = t[-trans:]
+
+    frq = state[-trans:,1]
+    frq_mean = np.mean(frq)
+    frq_detrend = frq-frq_mean
+
+    z = z[-trans:]
+    z_mean = np.mean(z)
+    z_detrend = z-z_mean
+
+    border_cut = 10000
+
+    hann = np.hanning(len(frq_detrend))
+    hamm = np.hamming(len(frq_detrend))
+    black= np.blackman(len(frq_detrend))
+
+    frq_signal = hilbert(hamm*frq_detrend)
+    frq_signal = frq_signal[border_cut:-border_cut]
+    frq_envelope = np.abs(frq_signal)
+    frq_phase = np.angle(frq_signal)
+
+    z_signal = hilbert(hamm*z_detrend)
+    z_signal = z_signal[border_cut:-border_cut]
+    z_envelope = np.abs(z_signal)
+    z_phase = np.angle(z_signal)
+
+    phase_diff = np.arctan2(np.sin(z_phase-frq_phase),np.cos(z_phase-frq_phase))
+    phase_diff_max_idx = argrelextrema(phase_diff, np.greater)[0]
+    phase_diff_max = phase_diff[phase_diff_max_idx]
+
+    t_phase = phase_diff_max_idx/10
+
+    mask = np.ma.array(phase_diff_max)
+
+    mask[phase_diff_max>3.05] = np.ma.masked
+
+    tn = t[border_cut:-border_cut]
+    
+    """
+    fig = plt.figure()
+    ax0 = fig.add_subplot(321)
+    ax0.plot(t, hamm*frq_detrend, label='signal')
+    ax0.plot(tn, frq_envelope, label='envelope')
+
+    ax0.legend()
+    ax1 = fig.add_subplot(322)
+    ax1.plot(tn, frq_phase)
+
+    ax3 = fig.add_subplot(323)
+    ax3.plot(t, z_detrend, label='z signal')
+    ax3.plot(tn, z_envelope, label='z envelope')
+
+    ax3.legend()
+    ax4 = fig.add_subplot(324)
+    ax4.plot(tn, z_phase)
+
+
+    ax5 = fig.add_subplot(325)
+    ax5.scatter(tn,phase_diff,c = "k",s=.1)
+    ax5.set_ylim(-4,4)
+    """
+
+
+    N = len(frq_detrend)/2+1
+    X = np.linspace(0, 5, N, endpoint=True)
+
+    Y = np.fft.fft(frq_detrend*hamm)
+
+    xn=X[X>0]
+    xn = 1/xn
+
+    yn=2.0*np.abs(Y[1:N])/N
+    power = 2.*np.abs(Y[1:N])**2/N
+    norm = np.max(power)
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(311)
+
+    ax.plot(xn, yn)
+    ax.set_xlim(5,50)
+    ax.set_title("T = "+str(T)+" , z = "+str(zstr))
+    
+    ax2 = fig.add_subplot(312)
+    ax2.plot(xn,power/norm)
+    ax2.set_xlim(5,50)
+    
+    ax3 = fig.add_subplot(313)
+    ax3.scatter(tn,phase_diff,c = "k",s=.1)
+    ax3.set_ylim(-4,4)
+    
+"""
+duration = 1.0
+fs = 400.0
+samples = int(fs*duration)
+t = np.arange(samples) / fs
+
+
+
+signal = chirp(t, 20.0, t[-1], 100.0)
+signal *= (1.0 + 0.5 * np.sin(2.0*np.pi*3.0*t) )
+
+analytic_signal = hilbert(signal)
+amplitude_envelope = np.abs(analytic_signal)
+instantaneous_phase = np.unwrap(np.angle(analytic_signal))
+instantaneous_frequency = (np.diff(instantaneous_phase) / (2.0*np.pi) * fs)
+
+
+fig = plt.figure()
+ax0 = fig.add_subplot(211)
+ax0.plot(t, signal, label='signal')
+ax0.plot(t, amplitude_envelope, label='envelope')
+ax0.set_xlabel("time in seconds")
+ax0.legend()
+ax1 = fig.add_subplot(212)
+ax1.plot(t[1:], instantaneous_frequency)
+ax1.set_xlabel("time in seconds")
+ax1.set_ylim(0.0, 120.0)
+"""
+#### make fourier analysis
+
+
+
+
+
+
+#border_behavior(zstr,20.0)
+"""
+
+
+    
+t       = np.arange(0,2000,.1)        
+state   = odeint(clock,state0,t,args=(rate,T,zstr,.5,ztan))
+
+frq = state[-18000:,1]
+frq_mean = np.mean(frq)
+
+frq_detrend = frq-frq_mean
+
+hann = np.hanning(len(frq_detrend))
+hamm = np.hamming(len(frq_detrend))
+black= np.blackman(len(frq_detrend))
+
+frq_signal = hilbert(hann*frq_detrend)
+frq_envelope = np.abs(frq_signal)
+
+tn = t[-18000:]
+fig = plt.figure()
+ax0 = fig.add_subplot(111)
+ax0.plot(tn, frq_signal, label='signal')
+ax0.plot(tn, frq_envelope, label='envelope')
+ax0.set_xlabel("time in seconds")
+ax0.legend()
+"""

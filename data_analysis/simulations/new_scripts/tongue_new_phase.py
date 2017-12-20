@@ -629,6 +629,7 @@ def newtongue(z_strength, z_per, strain = rate, upper = 1.0, lower = 1.0, phase 
     plt.show()
 """ 
 #tongue(np.linspace(0.001,0.1,100), np.linspace(19,25,100),upper = 1.0, lower = 1, phase = 1)
-tongue(np.linspace(0.001,0.1,100), np.linspace(24,32,100),strain = rate1, upper = 1.0, lower = 1, phase = 1)
-tongue(np.linspace(0.001,0.1,100), np.linspace(13,19,100),strain = rate7, upper = 1.0, lower = 1, phase = 1)
+tongue(np.linspace(0.001,0.1,100), np.linspace(24,32,100),strain = rate7, upper = 1.0, lower = 1, phase = 1)
+tongue(np.linspace(0.001,0.1,100), np.linspace(13,19,100),strain = rate1, upper = 1.0, lower = 1, phase = 1)
+tongue(np.linspace(0.01,1,100), np.linspace(12,65,100),strain = rate1, upper = 1.0, lower = 1, phase = 1)
 #newtongue(np.linspace(0.001,0.1,100), np.linspace(21,25,100), phase = 1)
